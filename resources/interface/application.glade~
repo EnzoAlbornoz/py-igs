@@ -4,6 +4,7 @@
   <requires lib="gtk+" version="3.20"/>
   <object class="GtkAboutDialog" id="window-about">
     <property name="can_focus">False</property>
+    <property name="title" translatable="yes">About</property>
     <property name="icon">resources/images/RGBTriangleIcon.png</property>
     <property name="type_hint">dialog</property>
     <property name="program_name">Py IGS</property>
@@ -13,7 +14,7 @@
     <property name="website_label" translatable="yes">University course page</property>
     <property name="authors">Enzo Coelho Albornoz
 Gabriel Soares Flores</property>
-    <property name="logo">../images/RGBTriangleIcon.png</property>
+    <property name="logo">resources/images/RGBTriangleIcon.png</property>
     <property name="license_type">mit-x11</property>
     <child type="titlebar">
       <placeholder/>
@@ -463,6 +464,7 @@ Gabriel Soares Flores</property>
                       <object class="GtkDrawingArea" id="viewport-canvas">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <signal name="draw" handler="on-canvas-draw" swapped="no"/>
                       </object>
                     </child>
                   </object>
