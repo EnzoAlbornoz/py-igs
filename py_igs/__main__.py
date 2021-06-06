@@ -3,6 +3,8 @@
 # Import Dependencies
 import sys
 import gi
+
+from parsers.file_obj import FileOBJ
 # Ensure Gi Libraries
 gi.require_version("Gtk", "3.0")
 gi.require_foreign("cairo")
@@ -39,3 +41,6 @@ if __name__ == "__main__":
     application = Application()
     # Start Application
     application.run(sys.argv)
+    # file_obj = FileOBJ.from_path("example/objects/african_head.obj")
+    # for vertex in file_obj.vertices:
+    #     print(vertex.into_tuple())
