@@ -5,6 +5,8 @@ import sys
 import gi
 
 from parsers.file_obj import FileOBJ
+from primitives.viewport import Viewport
+from primitives.window import Window
 # Ensure Gi Libraries
 gi.require_version("Gtk", "3.0")
 gi.require_foreign("cairo")
@@ -23,10 +25,13 @@ class Application(Gtk.Application):
         self.args = args
         self.kwargs = kwargs
         # Define Attributes
-        self.app_window = None
+        self.app_window: ApplicationWindow = None
+        self.cg_window: Window = None
+        self.cg_viewport: Viewport = None
     # Define Lifecycle Handlers ------------------------------------------------
     # Pre-Visible Procedures
     def do_startup(self):
+        # Load GTK
         Gtk.Application.do_startup(self)
     # To Visible Procedures
     def do_activate(self):
