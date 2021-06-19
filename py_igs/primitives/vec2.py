@@ -21,6 +21,16 @@ class Vector2(Matrix):
         x, y = self.lines()[0]
         # Return as Tuple
         return (x, y)
+    def get_x(self) -> float:
+        # Destructure Matrix
+        x = self.lines()[0][0]
+        # Return value
+        return x
+    def get_y(self) -> float:
+        # Destructure Matrix
+        y = self.lines()[0][1]
+        # Return value
+        return y
     # Conversions
     def as_vec3(self, z: float = 0) -> Vector3:
         # Destructure Matrix

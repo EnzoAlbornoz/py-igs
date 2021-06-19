@@ -13,3 +13,18 @@ class Vector3(Matrix):
         x, y, z = self.lines()[0]
         # Return as Tuple
         return (x, y, z)
+    def get_x(self) -> float:
+        # Destructure Matrix
+        x = self.lines()[0][0]
+        # Return value
+        return x
+    def get_y(self) -> float:
+        # Destructure Matrix
+        y = self.lines()[0][1]
+        # Return value
+        return y
+    def get_z(self) -> float:
+        # Destructure Matrix
+        z = self.lines()[0][2]
+        # Return value
+        return z

@@ -290,6 +290,7 @@ Gabriel Soares Flores</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <signal name="clicked" handler="on-btn-clicked-move-up" swapped="no"/>
                           </object>
                           <packing>
                             <property name="left_attach">2</property>
@@ -304,6 +305,7 @@ Gabriel Soares Flores</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <signal name="clicked" handler="on-btn-clicked-move-down" swapped="no"/>
                           </object>
                           <packing>
                             <property name="left_attach">2</property>
@@ -318,6 +320,7 @@ Gabriel Soares Flores</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <signal name="clicked" handler="on-btn-clicked-move-left" swapped="no"/>
                           </object>
                           <packing>
                             <property name="left_attach">0</property>
@@ -372,6 +375,7 @@ Gabriel Soares Flores</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <signal name="clicked" handler="on-btn-clicked-zoom-in" swapped="no"/>
                           </object>
                           <packing>
                             <property name="left_attach">6</property>
@@ -386,6 +390,7 @@ Gabriel Soares Flores</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <signal name="clicked" handler="on-btn-clicked-zoom-out" swapped="no"/>
                           </object>
                           <packing>
                             <property name="left_attach">6</property>
@@ -464,6 +469,7 @@ Gabriel Soares Flores</property>
                       <object class="GtkDrawingArea" id="viewport-canvas">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <signal name="configure-event" handler="on-canvas-configure" swapped="no"/>
                         <signal name="draw" handler="on-canvas-draw" swapped="no"/>
                       </object>
                     </child>

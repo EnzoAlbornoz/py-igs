@@ -28,18 +28,6 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         self.viewport = viewport
     def get_viewport(self) -> Viewport:
         return self.viewport
-    # Define Signals
-    @Gtk.Template.Callback("on-canvas-configure")
-    def on_canvas_configure(self, _widget, event):
-        # Resize Viewport
-        if self.viewport is None:
-            self.viewport = Viewport(0, 0, event.width, event.height)
-            self.viewport.set_window(Window(0, 0, event.width, event.height))
-        else:
-            self.viewport.set_width(event.width, True)
-            self.viewport.set_height(event.height, True)
-        # Log Operation
-        self.console_log(f"[Viewport] Resized to {self.viewport.get_width()}x{self.viewport.get_height()}")
     @Gtk.Template.Callback("on-canvas-draw")
     def on_canvas_draw(self, _widget, ctx: Context):
         # Clear Screen
@@ -74,3 +62,54 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         adjustment = self.widget_logger_scroll.get_vadjustment()
         v_adjust_to = adjustment.get_upper() - adjustment.get_page_size()
         adjustment.set_value(v_adjust_to)
+    # Define Signals
+    @Gtk.Template.Callback("on-canvas-configure")
+    def on_canvas_configure(self, _widget, event):
+        # Resize Viewport
+        if self.viewport is None:
+            self.viewport = Viewport(0, 0, event.width, event.height)
+            self.viewport.set_window(Window(0, 0, event.width, event.height))
+        else:
+            self.viewport.set_width(event.width, True)
+            self.viewport.set_height(event.height, True)
+        # Log Operation
+        self.console_log(f"[Viewport] Resized to {self.viewport.get_width()}x{self.viewport.get_height()}")
+    
+    @Gtk.Template.Callback("on-btn-clicked-move-up")
+    def on_btn_clicked_move_up(self, _button):
+        # Pan Window Down
+        self.viewport.window.pan(0, -10)
+        # Force Redraw
+        self.widget_canvas.queue_draw()
+    @Gtk.Template.Callback("on-btn-clicked-move-down")
+    def on_btn_clicked_move_down(self, _button):
+        # Pan Window Down
+        self.viewport.window.pan(0, 10)
+        # Force Redraw
+        self.widget_canvas.queue_draw()
+    @Gtk.Template.Callback("on-btn-clicked-move-left")
+    def on_btn_clicked_move_left(self, _button):
+        # Pan Window Down
+        self.viewport.window.pan(10, 0)
+        # Force Redraw
+        self.widget_canvas.queue_draw()
+    @Gtk.Template.Callback("on-btn-clicked-move-right")
+    def on_btn_clicked_move_right(self, _button):
+        # Pan Window Down
+        self.viewport.window.pan(-10, 0)
+        # Force Redraw
+        self.widget_canvas.queue_draw()
+
+    @Gtk.Template.Callback("on-btn-clicked-zoom-in")
+    def on_btn_clicked_zoom_in(self, _button):
+        # Pan Window Down
+        self.viewport.window.scale(0.9)
+        # Force Redraw
+        self.widget_canvas.queue_draw()
+    
+    @Gtk.Template.Callback("on-btn-clicked-zoom-out")
+    def on_btn_clicked_zoom_out(self, _button):
+        # Pan Window Down
+        self.viewport.window.scale(1.1)
+        # Force Redraw
+        self.widget_canvas.queue_draw()
