@@ -479,6 +479,7 @@ Gabriel Soares Flores</property>
                         <signal name="enter-notify-event" handler="on-canvas-mouse-enter" swapped="no"/>
                         <signal name="leave-notify-event" handler="on-canvas-mouse-leave" swapped="no"/>
                         <signal name="motion-notify-event" handler="on-canvas-mouse-motion" swapped="no"/>
+                        <signal name="scroll-event" handler="on-canvas-scroll" swapped="no"/>
                       </object>
                     </child>
                   </object>

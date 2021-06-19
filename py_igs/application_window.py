@@ -31,6 +31,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
             | Gdk.EventMask.BUTTON1_MOTION_MASK
             | Gdk.EventMask.ENTER_NOTIFY_MASK
             | Gdk.EventMask.LEAVE_NOTIFY_MASK
+            | Gdk.EventMask.SCROLL_MASK
         )
     # Define References Getters and Setters
     def set_viewport(self, viewport: Viewport):
@@ -87,7 +88,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     # Pan Handlers
     @Gtk.Template.Callback("on-btn-clicked-move-up")
     def on_btn_clicked_move_up(self, _button):
-        # Pan Window Down
+        # Pan Window Up
         self.viewport.window.pan(0, 10)
         # Force Redraw
         self.widget_canvas.queue_draw()
@@ -99,13 +100,13 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         self.widget_canvas.queue_draw()
     @Gtk.Template.Callback("on-btn-clicked-move-left")
     def on_btn_clicked_move_left(self, _button):
-        # Pan Window Down
+        # Pan Window Left
         self.viewport.window.pan(-10, 0)
         # Force Redraw
         self.widget_canvas.queue_draw()
     @Gtk.Template.Callback("on-btn-clicked-move-right")
     def on_btn_clicked_move_right(self, _button):
-        # Pan Window Down
+        # Pan Window Right
         self.viewport.window.pan(10, 0)
         # Force Redraw
         self.widget_canvas.queue_draw()
@@ -113,16 +114,30 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     # Zoom Handlers
     @Gtk.Template.Callback("on-btn-clicked-zoom-in")
     def on_btn_clicked_zoom_in(self, _button):
-        # Pan Window Down
+        # Zoom In
         self.viewport.window.scale(0.9)
         # Force Redraw
         self.widget_canvas.queue_draw()
     @Gtk.Template.Callback("on-btn-clicked-zoom-out")
     def on_btn_clicked_zoom_out(self, _button):
-        # Pan Window Down
+        # Zoom Out
         self.viewport.window.scale(1.1)
         # Force Redraw
         self.widget_canvas.queue_draw()
+    @Gtk.Template.Callback("on-canvas-scroll")
+    def on_canvas_scroll(self, _canvas, event):
+        # Check Zoom Direction
+        if event.direction == Gdk.ScrollDirection.UP:
+            # Zoom In
+            self.viewport.window.scale(0.9)
+        elif event.direction == Gdk.ScrollDirection.DOWN:
+            # Zoom Out
+            self.viewport.window.scale(1.1)
+        else:
+            raise ValueError(f"Scroll direction {event.direction} is not valid!")
+        # Force Redraw
+        self.widget_canvas.queue_draw()
+        
 
     # Drag Handlers  
     @Gtk.Template.Callback("on-canvas-drag-start")

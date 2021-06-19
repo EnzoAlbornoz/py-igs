@@ -62,6 +62,7 @@ Gabriel Soares Flores</property>
     <property name="gravity">center</property>
     <property name="show_menubar">False</property>
     <signal name="button-release-event" handler="on-window-mouse-release" swapped="no"/>
+    <signal name="motion-notify-event" handler="on-window-mouse-motion" swapped="no"/>
     <child type="titlebar">
       <placeholder/>
     </child>
@@ -477,6 +478,7 @@ Gabriel Soares Flores</property>
                         <signal name="draw" handler="on-canvas-draw" swapped="no"/>
                         <signal name="enter-notify-event" handler="on-canvas-mouse-enter" swapped="no"/>
                         <signal name="leave-notify-event" handler="on-canvas-mouse-leave" swapped="no"/>
+                        <signal name="motion-notify-event" handler="on-canvas-mouse-motion" swapped="no"/>
                       </object>
                     </child>
                   </object>
