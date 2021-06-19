@@ -335,6 +335,7 @@ Gabriel Soares Flores</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <signal name="clicked" handler="on-btn-clicked-move-right" swapped="no"/>
                           </object>
                           <packing>
                             <property name="left_attach">4</property>
@@ -470,6 +471,7 @@ Gabriel Soares Flores</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <signal name="configure-event" handler="on-canvas-configure" swapped="no"/>
+                        <signal name="drag-begin" handler="on-canvas-drag-begin" swapped="no"/>
                         <signal name="draw" handler="on-canvas-draw" swapped="no"/>
                       </object>
                     </child>

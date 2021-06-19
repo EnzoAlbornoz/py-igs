@@ -1,6 +1,6 @@
 # Import Dependencies
 import gi
-from gi.repository import Gtk
+from gi.repository import Gtk, Gdk
 from cairo import Context
 from primitives.viewport import Viewport
 from primitives.window import Window
@@ -16,13 +16,16 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     widget_logger = Gtk.Template.Child("widget-logger-content")
     widget_logger_scroll = Gtk.Template.Child("widget-logger-historic")
     widget_canvas = Gtk.Template.Child("viewport-canvas")
-    # file_obj = FileOBJ.from_path("example/objects/african_head.obj")
     # Define Constructor
     def __init__(self, *args, **kwargs) -> None:
         # Call Super Constructor
         super().__init__(*args, **kwargs)
         # Add Attributes
         self.viewport = None
+        # Setup Drag n Drop
+        drag_target = Gtk.TargetEntry.new("mouse-move", Gtk.TargetFlags.SAME_APP, 1)
+        self.widget_canvas.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [drag_target], Gdk.DragAction.DEFAULT)
+        self.widget_canvas.drag_dest_set(Gtk.DestDefaults.MOTION, [drag_target], Gdk.DragAction.DEFAULT)
     # Define References Getters and Setters
     def set_viewport(self, viewport: Viewport):
         self.viewport = viewport
@@ -75,6 +78,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         # Log Operation
         self.console_log(f"[Viewport] Resized to {self.viewport.get_width()}x{self.viewport.get_height()}")
     
+    # Pan Handlers
     @Gtk.Template.Callback("on-btn-clicked-move-up")
     def on_btn_clicked_move_up(self, _button):
         # Pan Window Down
@@ -100,16 +104,25 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         # Force Redraw
         self.widget_canvas.queue_draw()
 
+    # Zoom Handlers
     @Gtk.Template.Callback("on-btn-clicked-zoom-in")
     def on_btn_clicked_zoom_in(self, _button):
         # Pan Window Down
         self.viewport.window.scale(0.9)
         # Force Redraw
         self.widget_canvas.queue_draw()
-    
     @Gtk.Template.Callback("on-btn-clicked-zoom-out")
     def on_btn_clicked_zoom_out(self, _button):
         # Pan Window Down
         self.viewport.window.scale(1.1)
         # Force Redraw
         self.widget_canvas.queue_draw()
+
+    # Drag Handlers
+    @Gtk.Template.Callback("on-canvas-drag-begin")
+    def on_canvas_drag_begin(self, _canvas, context):
+        pass
+
+    @Gtk.Template.Callback("on-canvas-drag-motion")
+    def on_canvas_drag_motion(self, _canvas, context, canvas_x, canvas_y, time_delta):
+        print(f"{canvas_x}x{canvas_y}")

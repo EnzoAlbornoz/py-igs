@@ -471,6 +471,8 @@ Gabriel Soares Flores</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <signal name="configure-event" handler="on-canvas-configure" swapped="no"/>
+                        <signal name="drag-begin" handler="on-canvas-drag-begin" swapped="no"/>
+                        <signal name="drag-motion" handler="on-canvas-drag-motion" swapped="no"/>
                         <signal name="draw" handler="on-canvas-draw" swapped="no"/>
                       </object>
                     </child>

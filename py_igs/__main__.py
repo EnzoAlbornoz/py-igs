@@ -3,8 +3,6 @@
 # Import Dependencies
 import sys
 import gi
-
-from parsers.file_obj import FileOBJ
 from primitives.viewport import Viewport
 from primitives.window import Window
 # Ensure Gi Libraries
@@ -46,6 +44,3 @@ if __name__ == "__main__":
     application = Application()
     # Start Application
     application.run(sys.argv)
-    # file_obj = FileOBJ.from_path("example/objects/african_head.obj")
-    # for vertex in file_obj.vertices:
-    #     print(vertex.into_tuple())
