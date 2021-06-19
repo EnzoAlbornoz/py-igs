@@ -2,6 +2,7 @@
 import gi
 from gi.repository import Gtk, Gdk
 from cairo import Context
+from primitives.vec2 import Vector2
 from primitives.viewport import Viewport
 from primitives.window import Window
 # Setup Graphic
@@ -22,10 +23,15 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         super().__init__(*args, **kwargs)
         # Add Attributes
         self.viewport = None
-        # Setup Drag n Drop
-        drag_target = Gtk.TargetEntry.new("mouse-move", Gtk.TargetFlags.SAME_APP, 1)
-        self.widget_canvas.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [drag_target], Gdk.DragAction.DEFAULT)
-        self.widget_canvas.drag_dest_set(Gtk.DestDefaults.MOTION, [drag_target], Gdk.DragAction.DEFAULT)
+        # Add Click Support for Canvas
+        self.drag_coords = None
+        self.widget_canvas.add_events(
+            Gdk.EventMask.BUTTON_PRESS_MASK
+            | Gdk.EventMask.BUTTON_RELEASE_MASK
+            | Gdk.EventMask.BUTTON1_MOTION_MASK
+            | Gdk.EventMask.ENTER_NOTIFY_MASK
+            | Gdk.EventMask.LEAVE_NOTIFY_MASK
+        )
     # Define References Getters and Setters
     def set_viewport(self, viewport: Viewport):
         self.viewport = viewport
@@ -82,25 +88,25 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     @Gtk.Template.Callback("on-btn-clicked-move-up")
     def on_btn_clicked_move_up(self, _button):
         # Pan Window Down
-        self.viewport.window.pan(0, -10)
+        self.viewport.window.pan(0, 10)
         # Force Redraw
         self.widget_canvas.queue_draw()
     @Gtk.Template.Callback("on-btn-clicked-move-down")
     def on_btn_clicked_move_down(self, _button):
         # Pan Window Down
-        self.viewport.window.pan(0, 10)
+        self.viewport.window.pan(0, -10)
         # Force Redraw
         self.widget_canvas.queue_draw()
     @Gtk.Template.Callback("on-btn-clicked-move-left")
     def on_btn_clicked_move_left(self, _button):
         # Pan Window Down
-        self.viewport.window.pan(10, 0)
+        self.viewport.window.pan(-10, 0)
         # Force Redraw
         self.widget_canvas.queue_draw()
     @Gtk.Template.Callback("on-btn-clicked-move-right")
     def on_btn_clicked_move_right(self, _button):
         # Pan Window Down
-        self.viewport.window.pan(-10, 0)
+        self.viewport.window.pan(10, 0)
         # Force Redraw
         self.widget_canvas.queue_draw()
 
@@ -118,11 +124,65 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         # Force Redraw
         self.widget_canvas.queue_draw()
 
-    # Drag Handlers
-    @Gtk.Template.Callback("on-canvas-drag-begin")
-    def on_canvas_drag_begin(self, _canvas, context):
-        pass
+    # Drag Handlers  
+    @Gtk.Template.Callback("on-canvas-drag-start")
+    def on_canvas_drag_start(self, _canvas, event):
+        # Start Capturing Drag Data
+        self.drag_coords = Vector2(event.x_root, event.y_root)
+        # Get Display
+        display = self.get_screen().get_display()
+        # Get Cursor
+        cursor_grabbing = Gdk.Cursor.new_from_name(display, "grabbing")
+        # Hijack Cursor
+        seat = display.get_default_seat()
+        seat.grab(self.get_window(), Gdk.SeatCapabilities.POINTER, True, cursor_grabbing, event, None, None)
+    @Gtk.Template.Callback("on-canvas-drag-end")
+    def on_canvas_drag_end(self, _canvas, event):
+        # Get Display
+        display = self.get_screen().get_display()
+        # Stop Grabbing
+        seat = display.get_default_seat()
+        seat.ungrab()
+        # Stop Capturing Drag Data
+        self.drag_coords = None
+    @Gtk.Template.Callback("on-window-mouse-release")
+    def on_window_mouse_release(self, _window, event):
+        if not self.drag_coords is None:
+            # Pipe Event
+            self.on_canvas_drag_end(self.widget_canvas, event)
+    @Gtk.Template.Callback("on-canvas-mouse-motion")
+    def on_canvas_drag_motion(self, _canvas, event):
+        # Check Draging
+        if not self.drag_coords is None:
+            # Get Event Drag Coords
+            drag_coords_event = Vector2(event.x_root, event.y_root)
+            # Get Inverse Scale of Viewport and Window
+            inverse_scale = self.viewport.get_inverse_scale()
+            # Compute Diff
+            (diff_x, diff_y) = ((self.drag_coords - drag_coords_event) * inverse_scale).try_into_vec2().as_tuple()
+            # Update View
+            self.viewport.window.pan(diff_x, -diff_y)
+            # Update Drag Coords
+            self.drag_coords = drag_coords_event
+            # Force Redraw
+            self.widget_canvas.queue_draw()
 
-    @Gtk.Template.Callback("on-canvas-drag-motion")
-    def on_canvas_drag_motion(self, _canvas, context, canvas_x, canvas_y, time_delta):
-        print(f"{canvas_x}x{canvas_y}")
+    @Gtk.Template.Callback("on-window-mouse-motion")
+    def on_window_mouse_motion(self, _window, event):
+        if not self.drag_coords is None:
+            # Pipe Event
+            self.on_canvas_drag_motion(self.widget_canvas, event)
+    
+    # Handle Canvas Enter/Leave
+    @Gtk.Template.Callback("on-canvas-mouse-enter")
+    def on_canvas_mouse_enter(self, _canvas, _event):
+        # Get Display
+        display = self.get_screen().get_display()
+        # Get Cursor
+        cursor_grabbing = Gdk.Cursor.new_from_name(display, "grab")
+        # Change Cursor
+        self.get_window().set_cursor(cursor_grabbing)
+    @Gtk.Template.Callback("on-canvas-mouse-leave")
+    def on_canvas_mouse_leave(self, _canvas, _event):
+        # Reset Cursor
+        self.get_window().set_cursor(None)

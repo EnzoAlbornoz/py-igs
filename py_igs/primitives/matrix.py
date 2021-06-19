@@ -38,7 +38,9 @@ class Matrix:
         if dim_self != dim_other:
             raise TypeError(f"Tried to add matrix of dimensions {dim_self} to a matrix of dimensions {dim_other}")
         # Sum Operation
-        return [[e1 + e2 for (e1, e2) in zip(line_self, line_other)] for (line_self, line_other) in zip(self.lines(), other.lines())]
+        new_elements = [[e1 + e2 for (e1, e2) in zip(line_self, line_other)] for (line_self, line_other) in zip(self.lines(), other.lines())]
+        # Create new Matrix and return it
+        return Matrix(new_elements)
     def __sub__(self, other: Matrix) -> Matrix:
         # Check Dimensions
         dim_self = self.dimensions()
@@ -46,17 +48,27 @@ class Matrix:
         if dim_self != dim_other:
             raise TypeError(f"Tried to add matrix of dimensions {dim_self} to a matrix of dimensions {dim_other}")
         # Sub Operation
-        return [[e1 - e2 for (e1, e2) in zip(line_self, line_other)] for (line_self, line_other) in zip(self.lines(), other.lines())]
-    def __mul__(self, other: Matrix) -> Matrix:
-        # Check Dimensions
-        (_, col_self) = self.dimensions()
-        (lin_other, _) = other.dimensions()
-        if (col_self != lin_other):
-            raise TypeError(f"Tried to multiply a matrix of {col_self} columns with a matrix of {lin_other} lines")
-        # Multiply Operation
-        new_elements = [[reduce(lambda el, lc: el + (lc[0] * lc[1]), zip(line, column), 0) for column in other.columns()] for line in self.lines()]
+        new_elements = [[e1 - e2 for (e1, e2) in zip(line_self, line_other)] for (line_self, line_other) in zip(self.lines(), other.lines())]
         # Create new Matrix and return it
         return Matrix(new_elements)
+    def __mul__(self, other: int | float | Matrix) -> Matrix:
+        if type(other) is Matrix:
+            # Check Dimensions
+            (_, col_self) = self.dimensions()
+            (lin_other, _) = other.dimensions()
+            if (col_self != lin_other):
+                raise TypeError(f"Tried to multiply a matrix of {col_self} columns with a matrix of {lin_other} lines")
+            # Multiply Operation
+            new_elements = [[reduce(lambda el, lc: el + (lc[0] * lc[1]), zip(line, column), 0) for column in other.columns()] for line in self.lines()]
+            # Create new Matrix and return it
+            return Matrix(new_elements)
+        elif type(other) is int or type(other) is float:
+            # Multiply Operation
+            new_elements = [[(element * other) for element in line] for line in self.lines()]
+            # Create new Matrix and return it
+            return Matrix(new_elements)
+        else:
+            raise TypeError(f"Cannot multitply a matrix with {type(other)}")
     def as_transverse(self) -> Matrix:
         # Transverse Matrix
         new_elements = self.columns()

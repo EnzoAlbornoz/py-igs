@@ -47,6 +47,12 @@ class Viewport:
         # Change Viewport Height
         self.y_max = self.y_min + height
 
+    def get_scale(self) -> float:
+        return self.get_width() / self.window.get_width()
+
+    def get_inverse_scale(self) -> float:
+        return self.window.get_width() / self.get_width()
+
     # Define Basic Matrix Transformations
     def viewport_transform(self, point: Vector2) -> Vector2:
         # Destructure Point

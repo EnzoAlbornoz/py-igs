@@ -61,6 +61,8 @@ Gabriel Soares Flores</property>
     <property name="icon">resources/images/RGBTriangle.png</property>
     <property name="gravity">center</property>
     <property name="show_menubar">False</property>
+    <signal name="button-release-event" handler="on-window-mouse-release" swapped="no"/>
+    <signal name="motion-notify-event" handler="on-window-mouse-motion" swapped="no"/>
     <child type="titlebar">
       <placeholder/>
     </child>
@@ -470,10 +472,13 @@ Gabriel Soares Flores</property>
                       <object class="GtkDrawingArea" id="viewport-canvas">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <signal name="button-press-event" handler="on-canvas-drag-start" swapped="no"/>
+                        <signal name="button-release-event" handler="on-canvas-drag-end" swapped="no"/>
                         <signal name="configure-event" handler="on-canvas-configure" swapped="no"/>
-                        <signal name="drag-begin" handler="on-canvas-drag-begin" swapped="no"/>
-                        <signal name="drag-motion" handler="on-canvas-drag-motion" swapped="no"/>
                         <signal name="draw" handler="on-canvas-draw" swapped="no"/>
+                        <signal name="enter-notify-event" handler="on-canvas-mouse-enter" swapped="no"/>
+                        <signal name="leave-notify-event" handler="on-canvas-mouse-leave" swapped="no"/>
+                        <signal name="motion-notify-event" handler="on-canvas-mouse-motion" swapped="no"/>
                       </object>
                     </child>
                   </object>
