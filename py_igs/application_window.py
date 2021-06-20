@@ -17,6 +17,9 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     widget_logger = Gtk.Template.Child("widget-logger-content")
     widget_logger_scroll = Gtk.Template.Child("widget-logger-historic")
     widget_canvas = Gtk.Template.Child("viewport-canvas")
+    # Global Attributes
+    g_nav_adjustment_zoom = Gtk.Template.Child("g-widget-navigation-nav-adjustment-zoom")
+    g_nav_adjustment_pan = Gtk.Template.Child("g-widget-navigation-nav-adjustment-pan")
     # Define Constructor
     def __init__(self, *args, **kwargs) -> None:
         # Call Super Constructor
@@ -49,19 +52,6 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         ctx.set_line_width(1)
         # Draw Viewport
         self.viewport.draw(ctx)
-        # # Draw Wireframe
-        # for face in self.file_obj.faces:
-        #     face_l = list(face)
-        #     for i in range(3):
-        #         v0 = self.file_obj.vertices[face_l[i]]
-        #         v1 = self.file_obj.vertices[face_l[(i+1) % 3]]
-        #         x0 = (v0.x + 1) * viewport.width / 2
-        #         x1 = (v1.x + 1) * viewport.width / 2
-        #         y0 = (v0.y + 1) * viewport.height / 2
-        #         y1 = (v1.y + 1) * viewport.height / 2
-        #         ctx.move_to(x0, viewport.height - y0)
-        #         ctx.line_to(x1, viewport.height - y1)
-        #         ctx.stroke()
     # Define Utility Functions
     def console_log(self, message: str):
         # Load Console Buffer
@@ -88,51 +78,65 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     # Pan Handlers
     @Gtk.Template.Callback("on-btn-clicked-move-up")
     def on_btn_clicked_move_up(self, _button):
+        # Get Pan Step
+        pan_step = self.g_nav_adjustment_pan.get_value()
         # Pan Window Up
-        self.viewport.window.pan(0, 10)
+        self.viewport.window.pan(0, pan_step)
         # Force Redraw
         self.widget_canvas.queue_draw()
     @Gtk.Template.Callback("on-btn-clicked-move-down")
     def on_btn_clicked_move_down(self, _button):
+        # Get Pan Step
+        pan_step = self.g_nav_adjustment_pan.get_value()
         # Pan Window Down
-        self.viewport.window.pan(0, -10)
+        self.viewport.window.pan(0, -pan_step)
         # Force Redraw
         self.widget_canvas.queue_draw()
     @Gtk.Template.Callback("on-btn-clicked-move-left")
     def on_btn_clicked_move_left(self, _button):
+        # Get Pan Step
+        pan_step = self.g_nav_adjustment_pan.get_value()
         # Pan Window Left
-        self.viewport.window.pan(-10, 0)
+        self.viewport.window.pan(-pan_step, 0)
         # Force Redraw
         self.widget_canvas.queue_draw()
     @Gtk.Template.Callback("on-btn-clicked-move-right")
     def on_btn_clicked_move_right(self, _button):
+        # Get Pan Step
+        pan_step = self.g_nav_adjustment_pan.get_value()
         # Pan Window Right
-        self.viewport.window.pan(10, 0)
+        self.viewport.window.pan(pan_step, 0)
         # Force Redraw
         self.widget_canvas.queue_draw()
 
     # Zoom Handlers
     @Gtk.Template.Callback("on-btn-clicked-zoom-in")
     def on_btn_clicked_zoom_in(self, _button):
+        # Get Zoom Diff
+        zoom_ammount = (self.g_nav_adjustment_zoom.get_value() / 100)
         # Zoom In
-        self.viewport.window.scale(0.9)
+        self.viewport.window.scale(1 - zoom_ammount)
         # Force Redraw
         self.widget_canvas.queue_draw()
     @Gtk.Template.Callback("on-btn-clicked-zoom-out")
     def on_btn_clicked_zoom_out(self, _button):
+        # Get Zoom Diff
+        zoom_ammount = (self.g_nav_adjustment_zoom.get_value() / 100)
         # Zoom Out
-        self.viewport.window.scale(1.1)
+        self.viewport.window.scale(1 + zoom_ammount)
         # Force Redraw
         self.widget_canvas.queue_draw()
     @Gtk.Template.Callback("on-canvas-scroll")
     def on_canvas_scroll(self, _canvas, event):
+        # Get Zoom Diff
+        zoom_ammount = (self.g_nav_adjustment_zoom.get_value() / 100)
         # Check Zoom Direction
         if event.direction == Gdk.ScrollDirection.UP:
             # Zoom In
-            self.viewport.window.scale(0.9)
+            self.viewport.window.scale(1 - zoom_ammount)
         elif event.direction == Gdk.ScrollDirection.DOWN:
             # Zoom Out
-            self.viewport.window.scale(1.1)
+            self.viewport.window.scale(1 + zoom_ammount)
         else:
             raise ValueError(f"Scroll direction {event.direction} is not valid!")
         # Force Redraw
@@ -181,7 +185,6 @@ class ApplicationWindow(Gtk.ApplicationWindow):
             self.drag_coords = drag_coords_event
             # Force Redraw
             self.widget_canvas.queue_draw()
-
     @Gtk.Template.Callback("on-window-mouse-motion")
     def on_window_mouse_motion(self, _window, event):
         if not self.drag_coords is None:

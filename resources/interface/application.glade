@@ -2,54 +2,12 @@
 <!-- Generated with glade 3.22.2 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
-  <object class="GtkAboutDialog" id="window-about">
-    <property name="can_focus">False</property>
-    <property name="title" translatable="yes">About</property>
-    <property name="icon_name">info</property>
-    <property name="type_hint">dialog</property>
-    <property name="program_name">Py IGS</property>
-    <property name="version">v0.0.1</property>
-    <property name="comments" translatable="yes">Software developed for the Computer Graphics (INE5420-2021.1)  classes, during the undergradution of Computer Science at Federal University of Santa Catarina (UFSC). </property>
-    <property name="website">https://cco.ufsc.br/</property>
-    <property name="website_label" translatable="yes">University course page</property>
-    <property name="authors">Enzo Coelho Albornoz
-Gabriel Soares Flores</property>
-    <property name="logo">resources/images/RGBTriangleIcon.png</property>
-    <property name="license_type">mit-x11</property>
-    <child type="titlebar">
-      <placeholder/>
-    </child>
-    <child internal-child="vbox">
-      <object class="GtkBox" id="window-about-container">
-        <property name="can_focus">False</property>
-        <property name="orientation">vertical</property>
-        <property name="spacing">2</property>
-        <child internal-child="action_area">
-          <object class="GtkButtonBox" id="window-about-action-area">
-            <property name="can_focus">False</property>
-            <property name="layout_style">end</property>
-            <child>
-              <object class="GtkButton" id="window-about-btn-exit">
-                <property name="label" translatable="yes">Close</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-              </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">False</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-      </object>
-    </child>
+  <object class="GtkAdjustment" id="g-widget-navigation-nav-adjustment-pan">
+    <property name="lower">1</property>
+    <property name="upper">4294967295</property>
+    <property name="value">10</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
   </object>
   <template class="window-root" parent="GtkApplicationWindow">
     <property name="can_focus">True</property>
@@ -136,6 +94,12 @@ Gabriel Soares Flores</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="orientation">vertical</property>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
                 <child>
                   <placeholder/>
                 </child>
@@ -244,7 +208,7 @@ Gabriel Soares Flores</property>
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">True</property>
-                    <property name="position">1</property>
+                    <property name="position">3</property>
                   </packing>
                 </child>
                 <child>
@@ -430,6 +394,88 @@ Gabriel Soares Flores</property>
                             <property name="height">2</property>
                           </packing>
                         </child>
+                        <child>
+                          <object class="GtkBox" id="nav-adjustment-zoom">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="margin_left">8</property>
+                            <property name="margin_right">8</property>
+                            <property name="margin_bottom">4</property>
+                            <child>
+                              <object class="GtkLabel" id="nav-adjustment-zoom-label">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="label" translatable="yes">Zoom Step (%)</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkScale" id="nav-adjustment-zoom-scale">
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="adjustment">g-widget-navigation-nav-adjustment-zoom</property>
+                                <property name="round_digits">1</property>
+                                <property name="value_pos">bottom</property>
+                              </object>
+                              <packing>
+                                <property name="expand">True</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="left_attach">0</property>
+                            <property name="top_attach">7</property>
+                            <property name="width">8</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkBox" id="nav-adjustment-pan">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="margin_top">8</property>
+                            <child>
+                              <object class="GtkLabel" id="nav-adjustment-pan-label">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="margin_left">8</property>
+                                <property name="margin_right">8</property>
+                                <property name="label" translatable="yes">Pan Step (px)</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkSpinButton" id="nav-adjustment-pan-spin">
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="input_purpose">number</property>
+                                <property name="adjustment">g-widget-navigation-nav-adjustment-pan</property>
+                                <property name="climb_rate">1</property>
+                                <property name="snap_to_ticks">True</property>
+                                <property name="numeric">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">True</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="left_attach">0</property>
+                            <property name="top_attach">6</property>
+                            <property name="width">8</property>
+                          </packing>
+                        </child>
                       </object>
                     </child>
                     <child type="label">
@@ -446,7 +492,7 @@ Gabriel Soares Flores</property>
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">True</property>
-                    <property name="position">2</property>
+                    <property name="position">4</property>
                   </packing>
                 </child>
               </object>
@@ -546,4 +592,61 @@ Gabriel Soares Flores</property>
       </object>
     </child>
   </template>
+  <object class="GtkAdjustment" id="g-widget-navigation-nav-adjustment-zoom">
+    <property name="lower">0.10000000000000001</property>
+    <property name="upper">50</property>
+    <property name="value">10</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">0.5</property>
+    <signal name="value-changed" handler="on-zoom-step-change" swapped="no"/>
+  </object>
+  <object class="GtkAboutDialog" id="window-about">
+    <property name="can_focus">False</property>
+    <property name="title" translatable="yes">About</property>
+    <property name="icon_name">info</property>
+    <property name="type_hint">dialog</property>
+    <property name="program_name">Py IGS</property>
+    <property name="version">v0.0.1</property>
+    <property name="comments" translatable="yes">Software developed for the Computer Graphics (INE5420-2021.1)  classes, during the undergradution of Computer Science at Federal University of Santa Catarina (UFSC). </property>
+    <property name="website">https://cco.ufsc.br/</property>
+    <property name="website_label" translatable="yes">University course page</property>
+    <property name="authors">Enzo Coelho Albornoz
+Gabriel Soares Flores</property>
+    <property name="logo">resources/images/RGBTriangleIcon.png</property>
+    <property name="license_type">mit-x11</property>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
+    <child internal-child="vbox">
+      <object class="GtkBox" id="window-about-container">
+        <property name="can_focus">False</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">2</property>
+        <child internal-child="action_area">
+          <object class="GtkButtonBox" id="window-about-action-area">
+            <property name="can_focus">False</property>
+            <property name="layout_style">end</property>
+            <child>
+              <object class="GtkButton" id="window-about-btn-exit">
+                <property name="label" translatable="yes">Close</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
 </interface>
