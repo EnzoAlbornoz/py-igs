@@ -2,6 +2,8 @@ from __future__ import annotations
 from typing import List, Tuple
 import cairo
 from objects.line_2d import Line2D
+from objects.point_2d import Point2D
+from objects.wireframe_2d import Wireframe2D
 from primitives.matrix import Matrix, homo_coords2_matrix_scale, homo_coords2_matrix_translate
 from primitives.vec2 import Vector2
 
@@ -73,3 +75,7 @@ class Window:
 
         line = Line2D(Vector2(10, 10), Vector2(100, 100))
         line.draw(cairo, inherited_transform)
+        point = Point2D(Vector2(200, 200))
+        point.draw(cairo, inherited_transform)
+        polygon = Wireframe2D(Vector2(110, 110), Vector2(130, 150),  Vector2(150, 110))
+        polygon.draw(cairo, inherited_transform)
