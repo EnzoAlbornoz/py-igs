@@ -423,10 +423,9 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         spin_button_x.set_numeric(True)
         spin_button_y.set_numeric(True)
         # Add Destroy Button
-        vertex_box_idx = len(self.add_object_wireframe_extra_points)
         def destroy_vertex(_button):
             # Remove From List
-            self.add_object_wireframe_extra_points.pop(vertex_box_idx)
+            self.add_object_wireframe_extra_points.remove(vertex_box)
             # Destroy
             vertex_box.destroy()
         destroy_button = Gtk.Button.new_with_label("🗑")

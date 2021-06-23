@@ -53,9 +53,23 @@ For zooming, you can use your mouse scroll or the `+` and `-` buttons on the nav
 
 To add an object, you need to click on the "Add" button located in the objects widget. A dialog will popup in your screen. In this dialog, insert the object name (unique in the scene) then insert the points coordinates of your object. You can select the type of the object by changing the active tab of the dialog. After that, click on the save button. The object will appear on the world at the given coordinates.
 
+<div align="center">
+    <img src="./doc/images/object-add.png" alt="Adding an object" height="200" ></img>
+    <p>
+        <em>Adding an object</em>
+    </p>
+</div>
+
 ### Removing Objects
 
 Select an object of the object list and then press the remove button in the objects widget. The object will disappear.
+
+<div align="center">
+    <img src="./doc/images/objects-widget.png" alt="Objects Widget" height="200" ></img>
+    <p>
+        <em>The objects widget</em>
+    </p>
+</div>
 
 ---
 ## About
