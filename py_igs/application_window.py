@@ -71,6 +71,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         # Define Variables to Handle New Objects
         self.add_object_current_type_page = None
         self.add_object_current_type = None
+        self.add_object_wireframe_extra_points = []
     # Define Sync Functions
     def sync_object_tree(self):
         # Clear Object Store
@@ -329,7 +330,8 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         # Reset Text
         self.dialog_object_add_object_name.set_text("")
         # Set Default Settings
-        self.add_object_current_type = DialogObjectType.POINT
+        if self.add_object_current_type is None:
+            self.add_object_current_type = DialogObjectType.POINT
         self.add_object_current_type_page = self.dialog_object_add_tab_point_coords
         # Show Dialog
         self.dialog_object_add.show()
@@ -385,6 +387,8 @@ class ApplicationWindow(Gtk.ApplicationWindow):
             self.sync_object_tree()
             # Log
             self.console_log(f"[Display File] Added {object_name} of type {object_to_build.get_type()} to display file")
+        # Clear Extra Fields
+        self.dialog_object_add_clear_extra_vertices()
 
     @Gtk.Template.Callback("on-dialog-object-add-name-entry-changed")
     def on_dialog_object_add_name_entry_changed(self, entry):
@@ -419,7 +423,11 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         spin_button_x.set_numeric(True)
         spin_button_y.set_numeric(True)
         # Add Destroy Button
+        vertex_box_idx = len(self.add_object_wireframe_extra_points)
         def destroy_vertex(_button):
+            # Remove From List
+            self.add_object_wireframe_extra_points.pop(vertex_box_idx)
+            # Destroy
             vertex_box.destroy()
         destroy_button = Gtk.Button.new_with_label("🗑")
         destroy_button.connect("clicked", destroy_vertex)
@@ -431,8 +439,18 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         vertex_box.pack_start(destroy_button, False, True, 0)
         # Add Box to Coords
         self.dialog_object_add_tab_wireframe_coords.pack_start(vertex_box, False, True, 0)
+        # Add Box to Extra Points List
+        self.add_object_wireframe_extra_points.append(vertex_box)
         # Update Widget
         self.dialog_object_add_tab_wireframe_coords.show_all()
+
+    def dialog_object_add_clear_extra_vertices(self):
+        # Destroy Wireframe Extra Points
+        for vertex_box in self.add_object_wireframe_extra_points:
+            # Destroy Box
+            vertex_box.destroy()
+        # Clear List Refs
+        self.add_object_wireframe_extra_points= []
 
     # Handle Menu Bar
     @Gtk.Template.Callback("on-global-menu-btn-about")
