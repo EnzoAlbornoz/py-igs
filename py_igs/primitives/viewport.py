@@ -1,8 +1,11 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
 import cairo
-from primitives.matrix import Matrix, homo_coords2_matrix_rotate, homo_coords2_matrix_scale, homo_coords2_matrix_translate
+from primitives.matrix import Matrix, homo_coords2_matrix_scale, homo_coords2_matrix_translate
 from primitives.vec2 import Vector2
 from primitives.window import Window
+if TYPE_CHECKING:
+    from primitives.display_file import DisplayFile
 
 class Viewport:
     # Initializes the Viewport
@@ -76,7 +79,7 @@ class Viewport:
         return to_origin * scale_to_viewport_size * to_viewport
 
     # Defines Draw Function
-    def draw(self, cairo: cairo.Context) -> None:
+    def draw(self, cairo: cairo.Context, display_file: DisplayFile) -> None:
         inherited_transform = self.as_transform()
         # Call Draw on Window
-        self.window.draw(cairo, inherited_transform)
+        self.window.draw(cairo, display_file, inherited_transform)

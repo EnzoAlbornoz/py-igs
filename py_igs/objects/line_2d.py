@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from primitives.graphical_object import GraphicalObject
+from objects.object_type import ObjectType
 if TYPE_CHECKING:
     from cairo import Context
     from primitives.matrix import Matrix
@@ -14,6 +15,10 @@ class Line2D(GraphicalObject):
         # Define Attributes
         self.point_a = point_a
         self.point_b = point_b
+    # Type Definition
+    @staticmethod
+    def get_type() -> ObjectType:
+        return ObjectType.LINE_2D
     # Define Methods
     def draw(self, cairo: Context, inherited_matrix: Matrix):
         # Cast points into homogeneus space

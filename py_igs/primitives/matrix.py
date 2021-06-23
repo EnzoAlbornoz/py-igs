@@ -69,6 +69,9 @@ class Matrix:
             return Matrix(new_elements)
         else:
             raise TypeError(f"Cannot multitply a matrix with {type(other)}")
+    def __rmul__(self, other) -> Matrix:
+        # Proxy Operation
+        return self.__mul__(other)
     def as_transverse(self) -> Matrix:
         # Transverse Matrix
         new_elements = self.columns()

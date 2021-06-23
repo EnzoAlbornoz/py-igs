@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import List, TYPE_CHECKING
+from objects.object_type import ObjectType
 from primitives.graphical_object import GraphicalObject
 if TYPE_CHECKING:
     from cairo import Context
@@ -11,8 +12,15 @@ class Wireframe2D(GraphicalObject):
     def __init__(self, *points: Vector2) -> None:
         # Call Super Constructor
         super().__init__()
+        # Check Points Length
+        if len(points) < 3:
+            raise ValueError("Wireframe2D need 3 or more points to be defined")
         # Define Attributes
         self.points: List[Vector2] = list(points)
+    # Type Definition
+    @staticmethod
+    def get_type() -> ObjectType:
+        return ObjectType.WIREFRAME_2D
     # Define Methods
     def draw(self, cairo: Context, inherited_matrix: Matrix):
         # Cast points into homogeneus space and match them with screen coords

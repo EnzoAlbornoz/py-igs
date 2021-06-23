@@ -1,12 +1,13 @@
 from __future__ import annotations
-from typing import List, Tuple
+from typing import TYPE_CHECKING
 import cairo
 from objects.line_2d import Line2D
 from objects.point_2d import Point2D
 from objects.wireframe_2d import Wireframe2D
 from primitives.matrix import Matrix, homo_coords2_matrix_scale, homo_coords2_matrix_translate
 from primitives.vec2 import Vector2
-
+if TYPE_CHECKING:
+    from primitives.display_file import DisplayFile
 class Window:
     # Initializes the Window
     def __init__(self, x_world_min: float, y_world_min: float, x_world_max: float, y_world_max: float) -> None:
@@ -62,7 +63,7 @@ class Window:
         self.y_min = y_min
         self.y_max = y_max
     # Define Rendering
-    def draw(self, cairo: cairo.Context, inherited_transform: Matrix) -> None:
+    def draw(self, cairo: cairo.Context, display_file: DisplayFile, inherited_transform: Matrix) -> None:
         # Draw Square
         points = [(10, 10), (100, 10), (100, 100), (10, 100), (10,10)]
         points = [Vector2.from_tuple(point).as_vec3(1) * inherited_transform for point in points]
@@ -73,8 +74,12 @@ class Window:
             cairo.line_to(x, y)
         cairo.stroke()
 
-        line = Line2D(Vector2(10, 10), Vector2(100, 100))
-        line.draw(cairo, inherited_transform)
+        # Draw Display File Objects
+        for drawable_object in display_file.get_drawable_objects():
+            drawable_object.draw(cairo, inherited_transform)
+
+        # line = Line2D(Vector2(10, 10), Vector2(100, 100))
+        # line.draw(cairo, inherited_transform)
         point = Point2D(Vector2(200, 200))
         point.draw(cairo, inherited_transform)
         polygon = Wireframe2D(Vector2(110, 110), Vector2(130, 150),  Vector2(150, 110))
