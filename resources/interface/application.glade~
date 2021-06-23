@@ -84,7 +84,6 @@ Gabriel Soares Flores
             <property name="can_focus">False</property>
             <child>
               <object class="GtkMenuItem" id="global-menu-item-scene">
-                <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">_Scene</property>
                 <property name="use_underline">True</property>
@@ -400,6 +399,7 @@ Gabriel Soares Flores
                           <object class="GtkButton" id="nav-btn-rotate-anticlock">
                             <property name="label" translatable="yes">↶</property>
                             <property name="visible">True</property>
+                            <property name="sensitive">False</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
                           </object>
@@ -414,6 +414,7 @@ Gabriel Soares Flores
                           <object class="GtkButton" id="nav-btn-rotate-clockwise">
                             <property name="label" translatable="yes">↷</property>
                             <property name="visible">True</property>
+                            <property name="sensitive">False</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
                           </object>
@@ -544,6 +545,7 @@ Gabriel Soares Flores
                           <object class="GtkButton" id="nav-btn-change-dimensions">
                             <property name="label" translatable="yes">2D</property>
                             <property name="visible">True</property>
+                            <property name="sensitive">False</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
                           </object>
@@ -558,6 +560,7 @@ Gabriel Soares Flores
                           <object class="GtkButton" id="nav-btn-change-perspective">
                             <property name="label" translatable="yes">OR</property>
                             <property name="visible">True</property>
+                            <property name="sensitive">False</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
                           </object>

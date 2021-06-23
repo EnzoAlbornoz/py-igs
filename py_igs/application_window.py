@@ -126,6 +126,8 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         self.viewport.window.pan(0, pan_step)
         # Force Redraw
         self.widget_canvas.queue_draw()
+        # Log
+        self.console_log(f"[Navigation] Moved {pan_step} to top")
     @Gtk.Template.Callback("on-btn-clicked-move-down")
     def on_btn_clicked_move_down(self, _button):
         # Get Pan Step
@@ -134,6 +136,8 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         self.viewport.window.pan(0, -pan_step)
         # Force Redraw
         self.widget_canvas.queue_draw()
+        # Log
+        self.console_log(f"[Navigation] Moved {pan_step} to bottom")
     @Gtk.Template.Callback("on-btn-clicked-move-left")
     def on_btn_clicked_move_left(self, _button):
         # Get Pan Step
@@ -142,6 +146,8 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         self.viewport.window.pan(-pan_step, 0)
         # Force Redraw
         self.widget_canvas.queue_draw()
+        # Log
+        self.console_log(f"[Navigation] Moved {pan_step} to left")
     @Gtk.Template.Callback("on-btn-clicked-move-right")
     def on_btn_clicked_move_right(self, _button):
         # Get Pan Step
@@ -150,24 +156,32 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         self.viewport.window.pan(pan_step, 0)
         # Force Redraw
         self.widget_canvas.queue_draw()
+        # Log
+        self.console_log(f"[Navigation] Moved {pan_step} to right")
 
     # Zoom Handlers
     @Gtk.Template.Callback("on-btn-clicked-zoom-in")
     def on_btn_clicked_zoom_in(self, _button):
         # Get Zoom Diff
-        zoom_ammount = (self.g_nav_adjustment_zoom.get_value() / 100)
+        adjustment_ammount = self.g_nav_adjustment_zoom.get_value()
+        zoom_ammount = (adjustment_ammount / 100)
         # Zoom In
         self.viewport.window.scale(1 - zoom_ammount)
         # Force Redraw
         self.widget_canvas.queue_draw()
+        # Log
+        self.console_log(f"[Navigation] Zoomed in {adjustment_ammount}%")
     @Gtk.Template.Callback("on-btn-clicked-zoom-out")
     def on_btn_clicked_zoom_out(self, _button):
         # Get Zoom Diff
-        zoom_ammount = (self.g_nav_adjustment_zoom.get_value() / 100)
+        adjustment_ammount = self.g_nav_adjustment_zoom.get_value()
+        zoom_ammount = (adjustment_ammount / 100)
         # Zoom Out
         self.viewport.window.scale(1 + zoom_ammount)
         # Force Redraw
         self.widget_canvas.queue_draw()
+        # Log
+        self.console_log(f"[Navigation] Zoomed out {adjustment_ammount}%")
     @Gtk.Template.Callback("on-canvas-scroll")
     def on_canvas_scroll(self, _canvas, event):
         # Get Zoom Diff
@@ -268,13 +282,15 @@ class ApplicationWindow(Gtk.ApplicationWindow):
             self.widget_objects_actions_remove.set_sensitive(False)
             return
         # Remove Selected Item from Display File
-        self.display_file.remove_object(self.selected_object_name)
+        object_name = self.selected_object_name
+        self.display_file.remove_object(object_name)
         self.selected_object_name = None
         # Remove Selected Item from TreeView
         self.sync_object_tree()
         # Force Redraw
         self.widget_canvas.queue_draw()
-        
+        # Log
+        self.console_log(f"[Display File] Removed {object_name} from display file")
     # Handle Objects Actions
     @Gtk.Template.Callback("on-dialog-objects-delete-event")
     def on_dialog_objects_delete_event(self, dialog, _event):
@@ -367,6 +383,8 @@ class ApplicationWindow(Gtk.ApplicationWindow):
             # Add Object to Display File
             self.display_file.add_object(object_name, object_to_build)
             self.sync_object_tree()
+            # Log
+            self.console_log(f"[Display File] Added {object_name} of type {object_to_build.get_type()} to display file")
 
     @Gtk.Template.Callback("on-dialog-object-add-name-entry-changed")
     def on_dialog_object_add_name_entry_changed(self, entry):
