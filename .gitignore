@@ -38,3 +38,6 @@ MANIFEST.in
 /releases/*
 pip-wheel-metadata
 /poetry.toml
+
+# Glade Files
+resources/interface/*.glade~

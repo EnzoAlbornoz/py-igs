@@ -30,6 +30,7 @@ Gabriel Soares Flores
 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
+  <!-- interface-local-resource-path ../../ -->
   <!-- interface-license-type mit -->
   <!-- interface-name Py-Igs -->
   <!-- interface-authors Enzo Coelho Albornoz\nGabriel Soares Flores -->
@@ -696,6 +697,7 @@ Gabriel Soares Flores
                     <child>
                       <object class="GtkDrawingArea" id="viewport-canvas">
                         <property name="visible">True</property>
+                        <property name="app_paintable">True</property>
                         <property name="can_focus">False</property>
                         <signal name="button-press-event" handler="on-canvas-drag-start" swapped="no"/>
                         <signal name="button-release-event" handler="on-canvas-drag-end" swapped="no"/>
@@ -774,6 +776,7 @@ Gabriel Soares Flores
   <object class="GtkAboutDialog" id="window-about">
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">About</property>
+    <property name="modal">True</property>
     <property name="icon_name">info</property>
     <property name="type_hint">dialog</property>
     <property name="program_name">Py IGS</property>
@@ -827,6 +830,7 @@ Gabriel Soares Flores</property>
     <property name="width_request">460</property>
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Add Object</property>
+    <property name="modal">True</property>
     <property name="icon_name">add</property>
     <property name="type_hint">dialog</property>
     <signal name="delete-event" handler="on-dialog-objects-delete-event" swapped="no"/>
