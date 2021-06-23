@@ -84,12 +84,11 @@ Gabriel Soares Flores
             <property name="can_focus">False</property>
             <child>
               <object class="GtkMenuItem" id="global-menu-item-scene">
-                <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">_Scene</property>
                 <property name="use_underline">True</property>
                 <child type="submenu">
-                  <object class="GtkMenu">
+                  <object class="GtkMenu" id="global-menu-scene">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                   </object>
@@ -97,29 +96,24 @@ Gabriel Soares Flores
               </object>
             </child>
             <child>
-              <object class="GtkMenuItem" id="global-menu-item-object">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">_Object</property>
-                <property name="use_underline">True</property>
-                <child type="submenu">
-                  <object class="GtkMenu">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                  </object>
-                </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkMenuItem" id="global-menu-item-about">
+              <object class="GtkMenuItem" id="global-menu-item-help">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">_Help</property>
                 <property name="use_underline">True</property>
                 <child type="submenu">
-                  <object class="GtkMenu">
+                  <object class="GtkMenu" id="global-menu-help">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <child>
+                      <object class="GtkMenuItem" id="global-menu-help-item-about">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">_About</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="on-global-menu-btn-about" swapped="no"/>
+                      </object>
+                    </child>
                   </object>
                 </child>
               </object>
@@ -777,14 +771,16 @@ Gabriel Soares Flores
     <property name="icon_name">info</property>
     <property name="type_hint">dialog</property>
     <property name="program_name">Py IGS</property>
-    <property name="version">v0.0.1</property>
-    <property name="comments" translatable="yes">Software developed for the Computer Graphics (INE5420-2021.1)  classes, during the undergradution of Computer Science at Federal University of Santa Catarina (UFSC). </property>
+    <property name="version">v0.1.0</property>
+    <property name="copyright" translatable="yes">2021 - All rights reserved</property>
+    <property name="comments" translatable="yes">Software developed for the Computer Graphics (INE5420-2021.1)  course. This course is part of our graduation in Computer Science at the Federal University of Santa Catarina (UFSC). </property>
     <property name="website">https://cco.ufsc.br/</property>
     <property name="website_label" translatable="yes">University course page</property>
     <property name="authors">Enzo Coelho Albornoz
 Gabriel Soares Flores</property>
     <property name="logo">resources/images/RGBTriangleIcon.png</property>
     <property name="license_type">mit-x11</property>
+    <signal name="delete-event" handler="on-window-about-delete-event" swapped="no"/>
     <child type="titlebar">
       <placeholder/>
     </child>
@@ -803,6 +799,7 @@ Gabriel Soares Flores</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <signal name="clicked" handler="on-window-about-btn-close" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">True</property>

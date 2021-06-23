@@ -64,23 +64,6 @@ class Window:
         self.y_max = y_max
     # Define Rendering
     def draw(self, cairo: cairo.Context, display_file: DisplayFile, inherited_transform: Matrix) -> None:
-        # Draw Square
-        points = [(10, 10), (100, 10), (100, 100), (10, 100), (10,10)]
-        points = [Vector2.from_tuple(point).as_vec3(1) * inherited_transform for point in points]
-        for i in range(len(points)):
-            (x, y) = points[i].try_into_vec2().as_tuple()
-            if i == 0:
-                cairo.move_to(x, y)
-            cairo.line_to(x, y)
-        cairo.stroke()
-
         # Draw Display File Objects
         for drawable_object in display_file.get_drawable_objects():
             drawable_object.draw(cairo, inherited_transform)
-
-        # line = Line2D(Vector2(10, 10), Vector2(100, 100))
-        # line.draw(cairo, inherited_transform)
-        point = Point2D(Vector2(200, 200))
-        point.draw(cairo, inherited_transform)
-        polygon = Wireframe2D(Vector2(110, 110), Vector2(130, 150),  Vector2(150, 110))
-        polygon.draw(cairo, inherited_transform)

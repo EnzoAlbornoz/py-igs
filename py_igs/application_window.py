@@ -41,6 +41,8 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     dialog_object_add_tab_line_coords = Gtk.Template.Child("window-object-add-line-coords")
     dialog_object_add_tab_wireframe_coords = Gtk.Template.Child("window-object-add-wireframe-coords")
     dialog_object_add_btn_save = Gtk.Template.Child("window-object-add-btn-save")
+
+    dialog_about = Gtk.Template.Child("window-about")
     # Global Attributes
     g_nav_adjustment_zoom = Gtk.Template.Child("g-widget-navigation-nav-adjustment-zoom")
     g_nav_adjustment_pan = Gtk.Template.Child("g-widget-navigation-nav-adjustment-pan")
@@ -51,7 +53,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         super().__init__(*args, **kwargs)
         # Add Attributes
         self.viewport = None
-        self.display_file = DisplayFile([("linha 1", Line2D.get_type(), Line2D(Vector2(10, 10), Vector2(100, 100)))])
+        self.display_file = DisplayFile()
         # Add Click Support for Canvas
         self.drag_coords = None
         self.widget_canvas.add_events(
@@ -413,3 +415,21 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         self.dialog_object_add_tab_wireframe_coords.pack_start(vertex_box, False, True, 0)
         # Update Widget
         self.dialog_object_add_tab_wireframe_coords.show_all()
+
+    # Handle Menu Bar
+    @Gtk.Template.Callback("on-global-menu-btn-about")
+    def on_global_menu_btn_about(self, _button):
+        # Show Dialog
+        self.dialog_about.show()
+
+    @Gtk.Template.Callback("on-window-about-delete-event")
+    def on_window_about_delete_event(self, dialog, _event):
+        # Hide Window
+        dialog.hide()
+        # Do Not Destroy
+        return True
+
+    @Gtk.Template.Callback("on-window-about-btn-close")
+    def on_window_about_btn_close(self, _button):
+        # Hide Dialog
+        self.dialog_about.hide()
