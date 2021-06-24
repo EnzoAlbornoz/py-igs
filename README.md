@@ -12,7 +12,7 @@ To install this software you will need these dependencies:
 
 - Gtk 3.20+
 - Python 3.8+
-- Poetry
+- Poetry (To install it, please visit the [official install instructions](https://python-poetry.org/docs/#installation))
 
 After install them, install python dependencies
 with:
