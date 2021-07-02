@@ -28,6 +28,8 @@ class Point2D(GraphicalObject):
         (x1, y1) = homo2d_point.try_into_vec2().as_tuple()
         # Get Cairo Line Width
         line_width_half = cairo.get_line_width() / 2
+        # Set Color
+        cairo.set_source_rgba(*self.color)
         # Draw a line that mimic point in canvas (cairo has autoclip on line with same origin/destiny)
         cairo.move_to(x1 - line_width_half, y1)
         cairo.line_to(x1 + line_width_half, y1)
@@ -36,3 +38,6 @@ class Point2D(GraphicalObject):
     def transform(self, transformation: Matrix):
         # Transform points
         self.point = (self.point.as_vec3(1) * transformation).try_into_vec2()
+
+    def get_center_coords(self) -> Vector2:
+        return self.point

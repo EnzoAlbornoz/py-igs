@@ -1,10 +1,11 @@
 # Import Dependencies
 import gi
+from math import fmod
 from sys import float_info
 from enum import IntEnum, auto, unique
 from gi.repository import Gtk, Gdk
 from cairo import Context
-from helpers import extract_points_as_vec2_from_box
+from helpers import extract_points_as_vec2_from_box, gdk_rgba_as_tuple
 from objects.line_2d import Line2D
 from objects.point_2d import Point2D
 from objects.wireframe_2d import Wireframe2D
@@ -37,16 +38,32 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     # Define Dialogs
     dialog_object_add = Gtk.Template.Child("window-object-add")
     dialog_object_add_object_name = Gtk.Template.Child("window-object-add-name-entry")
+    dialog_object_add_object_color = Gtk.Template.Child("window-object-add-color-value")
     dialog_object_add_tab_point_coords = Gtk.Template.Child("window-object-add-point-coords")
     dialog_object_add_tab_line_coords = Gtk.Template.Child("window-object-add-line-coords")
     dialog_object_add_tab_wireframe_coords = Gtk.Template.Child("window-object-add-wireframe-coords")
     dialog_object_add_btn_save = Gtk.Template.Child("window-object-add-btn-save")
+
+    dialog_object_edit = Gtk.Template.Child("window-object-edit")
+    dialog_object_edit_rotate_around_center = Gtk.Template.Child("window-object-edit-rotate-around-center")
+    dialog_object_edit_rotate_around_origin = Gtk.Template.Child("window-object-edit-rotate-around-origin")
+    dialog_object_edit_rotate_around_point = Gtk.Template.Child("window-object-edit-rotate-around-point")
+    dialog_object_edit_rotate_x_value = Gtk.Template.Child("window-object-edit-rotate-x-value")
+    dialog_object_edit_rotate_y_value = Gtk.Template.Child("window-object-edit-rotate-y-value")
 
     dialog_about = Gtk.Template.Child("window-about")
     # Global Attributes
     g_nav_adjustment_zoom = Gtk.Template.Child("g-widget-navigation-nav-adjustment-zoom")
     g_nav_adjustment_pan = Gtk.Template.Child("g-widget-navigation-nav-adjustment-pan")
     g_tree_objects_store = Gtk.Template.Child("g-widget-objects-tree-store")
+
+    g_adj_dialog_edit_translate_x = Gtk.Template.Child("g-window-object-edit-translate-adjustment-x")
+    g_adj_dialog_edit_translate_y = Gtk.Template.Child("g-window-object-edit-translate-adjustment-y")
+    g_adj_dialog_edit_rotate_amount = Gtk.Template.Child("g-window-object-edit-rotate-adjustment-amount")
+    g_adj_dialog_edit_rotate_around_x = Gtk.Template.Child("g-window-object-edit-rotate-around-adjustment-x")
+    g_adj_dialog_edit_rotate_around_y = Gtk.Template.Child("g-window-object-edit-rotate-around-adjustment-y")
+    g_adj_dialog_edit_scale_x = Gtk.Template.Child("g-window-object-edit-scale-adjustment-x")
+    g_adj_dialog_edit_scale_y = Gtk.Template.Child("g-window-object-edit-scale-adjustment-y")
     # Define Constructor
     def __init__(self, *args, **kwargs) -> None:
         # Call Super Constructor
@@ -72,6 +89,8 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         self.add_object_current_type_page = None
         self.add_object_current_type = None
         self.add_object_wireframe_extra_points = []
+        # Init White Color
+        self.add_object_current_color = Gdk.RGBA()
     # Define Sync Functions
     def sync_object_tree(self):
         # Clear Object Store
@@ -268,8 +287,8 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         # Enable click on buttons if they are disable
         if not self.widget_objects_actions_remove.get_sensitive():
             self.widget_objects_actions_remove.set_sensitive(True)
-        # if not self.widget_objects_actions_edit.get_sensitive():
-        #     self.widget_objects_actions_edit.set_sensitive(True)
+        if not self.widget_objects_actions_edit.get_sensitive():
+            self.widget_objects_actions_edit.set_sensitive(True)
         # Get Selected Object Name
         list_iter = self.g_tree_objects_store.get_iter(path)
         (selected_name, *_) = self.g_tree_objects_store.get(list_iter, 0)
@@ -281,6 +300,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         # Check Double Delete
         if self.selected_object_name is None:
             self.widget_objects_actions_remove.set_sensitive(False)
+            self.widget_objects_actions_edit.set_sensitive(False)
             return
         # Remove Selected Item from Display File
         object_name = self.selected_object_name
@@ -293,10 +313,10 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         # Log
         self.console_log(f"[Display File] Removed {object_name} from display file")
     # Handle Objects Actions
-    @Gtk.Template.Callback("on-dialog-objects-delete-event")
-    def on_dialog_objects_delete_event(self, dialog, _event):
+    @Gtk.Template.Callback("on-dialog-add-objects-delete-event")
+    def on_dialog_objects_delete_event(self, _dialog, _event):
         # Hide Window
-        dialog.hide()
+        self.dialog_object_add.hide()
         # Do Not Destroy
         return True
 
@@ -329,6 +349,10 @@ class ApplicationWindow(Gtk.ApplicationWindow):
                     box_coords_element.set_numeric(True)
         # Reset Text
         self.dialog_object_add_object_name.set_text("")
+        # Reset Color
+        color_white = Gdk.RGBA()
+        self.dialog_object_add_object_color.set_rgba(color_white)
+        self.add_object_current_color = color_white
         # Set Default Settings
         if self.add_object_current_type is None:
             self.add_object_current_type = DialogObjectType.POINT
@@ -342,6 +366,11 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         self.add_object_current_type_page = page
         # Save Selected Type Too
         self.add_object_current_type = DialogObjectType(page_num)
+
+    @Gtk.Template.Callback("on-object-add-color-set")
+    def on_object_add_color_set(self, button):
+        # Get Color From Button
+        self.add_object_current_color = button.get_rgba()
 
     @Gtk.Template.Callback("on-btn-add-objects-cancel")
     def on_btn_add_objects_cancel(self, _button):
@@ -382,6 +411,9 @@ class ApplicationWindow(Gtk.ApplicationWindow):
                 object_to_build = Wireframe2D(*points)
             # Get Object Name
             object_name = self.dialog_object_add_object_name.get_text()
+            # Get Object Color
+            object_color = gdk_rgba_as_tuple(self.add_object_current_color)
+            object_to_build.set_color(object_color)
             # Add Object to Display File
             self.display_file.add_object(object_name, object_to_build)
             self.sync_object_tree()
@@ -449,7 +481,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
             # Destroy Box
             vertex_box.destroy()
         # Clear List Refs
-        self.add_object_wireframe_extra_points= []
+        self.add_object_wireframe_extra_points = []
 
     # Handle Menu Bar
     @Gtk.Template.Callback("on-global-menu-btn-about")
@@ -458,9 +490,9 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         self.dialog_about.show()
 
     @Gtk.Template.Callback("on-window-about-delete-event")
-    def on_window_about_delete_event(self, dialog, _event):
+    def on_window_about_delete_event(self, _dialog, _event):
         # Hide Window
-        dialog.hide()
+        self.dialog_about.hide()
         # Do Not Destroy
         return True
 
@@ -468,3 +500,103 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     def on_window_about_btn_close(self, _button):
         # Hide Dialog
         self.dialog_about.hide()
+
+    # Objects Edit Handlers
+    @Gtk.Template.Callback("on-btn-clicked-objects-edit")
+    def on_btn_clicked_objects_edit(self, _button):
+        # Check Double Delete
+        if self.selected_object_name is None:
+            self.widget_objects_actions_remove.set_sensitive(False)
+            self.widget_objects_actions_edit.set_sensitive(False)
+            return
+        # Prepare Fields
+        self.g_adj_dialog_edit_translate_x.configure(0, -float_info.max, float_info.max, 1, 10, 0)
+        self.g_adj_dialog_edit_translate_y.configure(0, -float_info.max, float_info.max, 1, 10, 0)
+        self.g_adj_dialog_edit_rotate_amount.configure(0, -360, 360, 1, 15, 0)
+        self.g_adj_dialog_edit_rotate_around_x.configure(0, -float_info.max, float_info.max, 1, 10, 0)
+        self.g_adj_dialog_edit_rotate_around_y.configure(0, -float_info.max, float_info.max, 1, 10, 0)
+        self.g_adj_dialog_edit_scale_x.configure(0, -float_info.max, float_info.max, 1, 10, 0)
+        self.g_adj_dialog_edit_scale_y.configure(0, -float_info.max, float_info.max, 1, 10, 0)
+        # Reset Rotation Radio Buttons
+        self.dialog_object_edit_rotate_around_origin.set_active(True)
+        self.dialog_object_edit_rotate_x_value.set_sensitive(False)
+        self.dialog_object_edit_rotate_y_value.set_sensitive(False)
+        # Show Dialog
+        self.dialog_object_edit.show()
+
+    @Gtk.Template.Callback("on-object-edit-radio-rotate-point-toggled")
+    def on_object_edit_radio_rotate_point_toggled(self, radio_button):
+        # Disable buttons if not selected
+        if not radio_button.get_active():
+            self.dialog_object_edit_rotate_x_value.set_sensitive(False)
+            self.dialog_object_edit_rotate_y_value.set_sensitive(False)
+        else:
+            self.dialog_object_edit_rotate_x_value.set_sensitive(True)
+            self.dialog_object_edit_rotate_y_value.set_sensitive(True)
+
+    @Gtk.Template.Callback("on-object-edit-radio-rotate-origin-toggled")
+    def on_object_edit_radio_rotate_origin_toggled(self, radio_button):
+        # Move rotate point to origin
+        if radio_button.get_active():
+            self.g_adj_dialog_edit_rotate_around_x.set_value(0)
+            self.g_adj_dialog_edit_rotate_around_y.set_value(0)
+
+    @Gtk.Template.Callback("on-object-edit-radio-rotate-center-toggled")
+    def on_object_edit_radio_rotate_center_toggled(self, radio_button):
+        # Move rotate point to object center
+        if radio_button.get_active():
+            # Get selected object center
+            object_center = self.display_file.get_object_ref(self.selected_object_name).get_center_coords()
+            # Define rotate point to the object center
+            self.g_adj_dialog_edit_rotate_around_x.set_value(object_center.get_x())
+            self.g_adj_dialog_edit_rotate_around_y.set_value(object_center.get_y())
+
+    @Gtk.Template.Callback("on-dialog-objects-edit-delete-event")
+    def on_dialog_objects_delete_event(self, _dialog, _event):
+        # Hide Window
+        self.dialog_object_edit.hide()
+        # Do Not Destroy
+        return True
+
+    @Gtk.Template.Callback("on-btn-edit-objects-cancel")
+    def on_btn_edit_objects_cancel(self, _button):
+        # Hide Window
+        self.dialog_object_edit.hide()
+        # Emit Response
+        self.dialog_object_edit.response(Gtk.ResponseType.CANCEL)
+
+    @Gtk.Template.Callback("on-btn-edit-objects-save")
+    def on_btn_edit_objects_save(self, _button):
+        # Hide Window
+        self.dialog_object_edit.hide()
+        # Emit Response
+        self.dialog_object_edit.response(Gtk.ResponseType.OK)
+
+    @Gtk.Template.Callback("on-dialog-edit-objects-response")
+    def on_dialog_edit_objects_response(self, _dialog, response_id):
+        # Ignore if canceling
+        if response_id == Gtk.ResponseType.OK:
+            # Get Translate Data
+            translate_x = self.g_adj_dialog_edit_translate_x.get_value()
+            translate_y = self.g_adj_dialog_edit_translate_y.get_value()
+            # Get Rotation Data
+            rotate_degrees = self.g_adj_dialog_edit_rotate_amount.get_value()
+            rotate_degrees = fmod(rotate_degrees, 360)
+            rotate_point_x = self.g_adj_dialog_edit_rotate_around_x.get_value()
+            rotate_point_y = self.g_adj_dialog_edit_rotate_around_y.get_value()
+            # Get Scaling Data
+            scale_x = self.g_adj_dialog_edit_scale_x.get_value()
+            scale_y = self.g_adj_dialog_edit_scale_y.get_value()
+            # Make Transform
+            self.display_file.transform_object(
+                self.selected_object_name, translate_x, translate_y,
+                rotate_degrees, rotate_point_x, rotate_point_y,
+                scale_x, scale_y
+            )
+            # Log
+            if translate_x != 0 or translate_y != 0:
+                self.console_log(f"[Edit] Translated {self.selected_object_name} by {translate_x} units in X and {translate_y} units in Y")
+            if rotate_degrees != 0:
+                self.console_log(f"[Edit] Rotated {self.selected_object_name} by {rotate_degrees} around [{rotate_point_x}, {rotate_point_y}]")
+            if scale_x != 0 or scale_y != 0:
+                self.console_log(f"[Edit] Scaled {self.selected_object_name} by {scale_x}% in X and {scale_y}% in Y")

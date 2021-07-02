@@ -66,4 +66,7 @@ class Window:
     def draw(self, cairo: cairo.Context, display_file: DisplayFile, inherited_transform: Matrix) -> None:
         # Draw Display File Objects
         for drawable_object in display_file.get_drawable_objects():
+            # Draw Object
             drawable_object.draw(cairo, inherited_transform)
+            # Reset Color
+            cairo.set_source_rgba(1, 1, 1, 1)

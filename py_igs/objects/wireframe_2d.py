@@ -1,7 +1,8 @@
 from __future__ import annotations
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, Tuple
 from objects.object_type import ObjectType
 from primitives.graphical_object import GraphicalObject
+from functools import reduce
 if TYPE_CHECKING:
     from cairo import Context
     from primitives.matrix import Matrix
@@ -23,6 +24,8 @@ class Wireframe2D(GraphicalObject):
         return ObjectType.WIREFRAME_2D
     # Define Methods
     def draw(self, cairo: Context, inherited_matrix: Matrix):
+        # Set Color
+        cairo.set_source_rgba(*self.color)
         # Cast points into homogeneus space and match them with screen coords
         xy_points = [
             (point.as_vec3(1) * inherited_matrix).try_into_vec2().as_tuple()
@@ -53,3 +56,10 @@ class Wireframe2D(GraphicalObject):
             (point.as_vec3(1) * transformation).try_into_vec2()
             for point in self.points
         ]
+
+    def get_center_coords(self) -> Vector2:
+        # Get Avg Point
+        points_len_mult = 1 / len(self.points)
+        avg_coords: Vector2 = reduce(lambda summed, point: summed + point, self.points)
+        avg_coords *= points_len_mult
+        return avg_coords.try_into_vec2()

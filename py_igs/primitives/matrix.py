@@ -101,8 +101,15 @@ class Matrix:
         # Cast Matrix
         return Vector3(x, y, z)
 
+def gen_identity_matrix(size: int) -> Matrix:
+    # Define and Return Matrix
+    size_range = range(size)
+    return Matrix([[1 if idx_r == idx_c else 0 for idx_c in size_range] for idx_r in size_range])
 
 # Define 2D Homogeneus Transformation Matrices
+def homo_coords2_matrix_identity() -> Matrix:
+    return gen_identity_matrix(3)
+
 def homo_coords2_matrix_translate(dx: float, dy: float) -> Matrix:
     # Define and Return Matrix
     return Matrix([[1, 0, 0], [0, 1, 0], [dx, dy, 1]])
