@@ -53,7 +53,7 @@ For zooming, you can use your mouse scroll or the `+` and `-` buttons on the nav
 
 To add an object, you need to click on the "Add" button located in the objects widget. A dialog will popup in your screen.
 
-In this dialog, insert the object name (unique in the scene) then insert the points coordinates of your object. You can select the type of the object by changing the active tab of the dialog.
+In this dialog, insert the object name (unique in the scene) then insert the points coordinates of your object. You can select the type of the object by changing the active tab of the dialog. The drawing color can also be defined in this dialog.
 
 After that, click on the save button. The object will appear on the world at the given coordinates.
 
@@ -64,12 +64,22 @@ After that, click on the save button. The object will appear on the world at the
     </p>
 </div>
 
+### Editing Objects (Transforms)
+Clicking in the edit button (in the objects widget) will open the editing dialog. In this window, you can define 3 transformations to apply on the object. They are: Translation, Rotation and Scaling. The translation will move the object over the world. The rotation will rotate the object around a given point that can be the world origin, the object center or a point that you specify. The scale will scale the objects in a "natural" way, i.e., based on the object center.
+
+<div align="center">
+    <img src="./doc/images/object-edit.png" alt="Editing an object" height="200" ></img>
+    <p>
+        <em>Editing an object</em>
+    </p>
+</div>
+
 ### Removing Objects
 
 Select an object of the object list and then press the remove button in the objects widget. The object will disappear.
 
 <div align="center">
-    <img src="./doc/images/objects-widget.png" alt="Objects Widget" height="200" ></img>
+    <img src="./doc/images/objects-widget.png" alt="Objects Widget" height="150" ></img>
     <p>
         <em>The objects widget</em>
     </p>

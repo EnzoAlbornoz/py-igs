@@ -1445,9 +1445,6 @@ Gabriel Soares Flores</property>
           </packing>
         </child>
         <child>
-          <placeholder/>
-        </child>
-        <child>
           <object class="GtkNotebook" id="window-object-add-types">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
