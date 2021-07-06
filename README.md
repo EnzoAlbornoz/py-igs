@@ -56,6 +56,8 @@ To add an object, you need to click on the "Add" button located in the objects w
 
 In this dialog, insert the object name (unique in the scene) then insert the points coordinates of your object. You can select the type of the object by changing the active tab of the dialog. The drawing color can also be defined in this dialog.
 
+You can also input raw values at the "Text" tab. To use it, declare points using this format: `(x1, y1), (x2, y2), ...` (Obs: New lines are not allowed).
+
 After that, click on the save button. The object will appear on the world at the given coordinates.
 
 <div align="center">

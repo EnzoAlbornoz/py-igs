@@ -5,7 +5,7 @@ from sys import float_info
 from enum import IntEnum, auto, unique
 from gi.repository import Gtk, Gdk
 from cairo import Context
-from helpers import extract_points_as_vec2_from_box, gdk_rgba_as_tuple
+from helpers import extract_points_as_vec2_from_box, gdk_rgba_as_tuple, parse_text_into_points_2d
 from objects.line_2d import Line2D
 from objects.point_2d import Point2D
 from objects.wireframe_2d import Wireframe2D
@@ -42,6 +42,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     dialog_object_add_tab_point_coords = Gtk.Template.Child("window-object-add-point-coords")
     dialog_object_add_tab_line_coords = Gtk.Template.Child("window-object-add-line-coords")
     dialog_object_add_tab_wireframe_coords = Gtk.Template.Child("window-object-add-wireframe-coords")
+    dialog_object_add_tab_text_coords = Gtk.Template.Child("window-object-add-text-value")
     dialog_object_add_btn_save = Gtk.Template.Child("window-object-add-btn-save")
 
     dialog_object_edit = Gtk.Template.Child("window-object-edit")
@@ -365,7 +366,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         # Save Selected Page
         self.add_object_current_type_page = page
         # Save Selected Type Too
-        self.add_object_current_type = DialogObjectType(page_num)
+        self.add_object_current_type = DialogObjectType(page_num) if (page_num < 3) else None
 
     @Gtk.Template.Callback("on-object-add-color-set")
     def on_object_add_color_set(self, button):
@@ -409,6 +410,25 @@ class ApplicationWindow(Gtk.ApplicationWindow):
                 points = extract_points_as_vec2_from_box(self.dialog_object_add_tab_wireframe_coords)
                 # Build Object
                 object_to_build = Wireframe2D(*points)
+            elif self.add_object_current_type == None:
+                # Get Text
+                points_text = self.dialog_object_add_tab_text_coords.get_text()
+                # Get Points
+                points = parse_text_into_points_2d(points_text)
+                # Check Object to Build
+                points_len = len(points)
+                if points_len == 1:
+                    # Its a Point
+                    object_to_build = Point2D(*points)
+                elif points_len == 2:
+                    # Its a Line
+                    object_to_build = Line2D(*points)
+                elif points_len >= 3:
+                    # Its a Wireframe
+                    object_to_build = Wireframe2D(*points)
+                else:
+                    # Error
+                    return
             # Get Object Name
             object_name = self.dialog_object_add_object_name.get_text()
             # Get Object Color

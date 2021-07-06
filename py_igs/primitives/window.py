@@ -1,10 +1,12 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+from math import atan
+
 import cairo
 from objects.line_2d import Line2D
 from objects.point_2d import Point2D
 from objects.wireframe_2d import Wireframe2D
-from primitives.matrix import Matrix, homo_coords2_matrix_scale, homo_coords2_matrix_translate
+from primitives.matrix import Matrix, homo_coords2_matrix_rotate, homo_coords2_matrix_scale, homo_coords2_matrix_translate
 from primitives.vec2 import Vector2
 if TYPE_CHECKING:
     from primitives.display_file import DisplayFile
@@ -62,6 +64,24 @@ class Window:
         self.x_max = x_max
         self.y_min = y_min
         self.y_max = y_max
+    # Define Normalized World Coordinates System
+    def as_normalized_coordinates_transform(self):
+        # Define World Center
+        world_center = self.get_center()
+        (center_x, center_y) = world_center.as_tuple()
+        # Translate World Center to Origin
+        translate_origin = homo_coords2_matrix_translate(-center_x, -center_y)
+        # Define Tetha
+        opposite = center_x - self.x_min
+        adjacent = self.y_max - center_y
+        vup_tetha = atan(opposite / adjacent)
+        # Rotate World
+        rotate_minus_theta = homo_coords2_matrix_rotate(-vup_tetha)
+        # Translate Back To Position
+        translate_back = homo_coords2_matrix_translate(center_x, center_y)
+        # Return as Transform
+        return translate_origin * rotate_minus_theta * translate_back
+
     # Define Rendering
     def draw(self, cairo: cairo.Context, display_file: DisplayFile, inherited_transform: Matrix) -> None:
         # Draw Display File Objects
