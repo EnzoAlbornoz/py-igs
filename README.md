@@ -11,7 +11,7 @@
 To install this software you will need these dependencies (with their thevelopment libraries):
 
 - Gtk 3.20+
-- PyGOBject Dependencies (`libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3`)
+- PyGOBject Dependencies (`libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3.0`)
 - Python 3.8+
 - Poetry (To install it, please visit the [official install instructions](https://python-poetry.org/docs/#installation))
 
