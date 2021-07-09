@@ -402,9 +402,9 @@ Gabriel Soares Flores
                           <object class="GtkButton" id="nav-btn-rotate-anticlock">
                             <property name="label" translatable="yes">↶</property>
                             <property name="visible">True</property>
-                            <property name="sensitive">False</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <signal name="clicked" handler="on-btn-clicked-rotate-counterclockwise" swapped="no"/>
                           </object>
                           <packing>
                             <property name="left_attach">0</property>
@@ -417,9 +417,9 @@ Gabriel Soares Flores
                           <object class="GtkButton" id="nav-btn-rotate-clockwise">
                             <property name="label" translatable="yes">↷</property>
                             <property name="visible">True</property>
-                            <property name="sensitive">False</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <signal name="clicked" handler="on-btn-clicked-rotate-clockwise" swapped="no"/>
                           </object>
                           <packing>
                             <property name="left_attach">4</property>

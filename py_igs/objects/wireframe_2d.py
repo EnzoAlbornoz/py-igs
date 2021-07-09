@@ -17,20 +17,33 @@ class Wireframe2D(GraphicalObject):
         if len(points) < 3:
             raise ValueError("Wireframe2D need 3 or more points to be defined")
         # Define Attributes
-        self.points: List[Vector2] = list(points)
+        self.points = list(points)
+        # Define Pipeline Attributes
+        self.pipeline_points = list(points)
     # Type Definition
     @staticmethod
     def get_type() -> ObjectType:
         return ObjectType.WIREFRAME_2D
+    # Define Pipeline Methods
+    def pipeline(self):
+        # Reset Pipeline Points
+        self.pipeline_points = list(self.points)
+        # Call Super
+        super().pipeline()
+    def pipeline_apply(self):
+        if self.in_pipeline:
+            # Persist Pipeline Points
+            self.points = list(self.pipeline_points)
+            # Call Super
+            super().pipeline_apply()
     # Define Methods
-    def draw(self, cairo: Context, inherited_matrix: Matrix):
+    def draw(self, cairo: Context):
+        # Get Points
+        points = self.pipeline_points if self.in_pipeline else self.points
         # Set Color
         cairo.set_source_rgba(*self.color)
         # Cast points into homogeneus space and match them with screen coords
-        xy_points = [
-            (point.as_vec3(1) * inherited_matrix).try_into_vec2().as_tuple()
-            for point in self.points
-        ]
+        xy_points = [ point.as_tuple() for point in points ]
         xy_points_len = len(xy_points)
         # Draw segments in canvas
         for (x, y), idx in zip(xy_points, range(xy_points_len)):
@@ -52,14 +65,24 @@ class Wireframe2D(GraphicalObject):
     
     def transform(self, transformation: Matrix):
         # Transform points
-        self.points = [
-            (point.as_vec3(1) * transformation).try_into_vec2()
-            for point in self.points
-        ]
+        if self.in_pipeline:
+            # Pipeline
+            self.pipeline_points = [
+                (point.as_vec3(1) * transformation).try_into_vec2()
+                for point in self.pipeline_points
+            ]
+        else:
+            # Raw Transform
+            self.points = [
+                (point.as_vec3(1) * transformation).try_into_vec2()
+                for point in self.points
+            ]
 
     def get_center_coords(self) -> Vector2:
+        # Get Points
+        points = self.pipeline_points if self.in_pipeline else self.points
         # Get Avg Point
-        points_len_mult = 1 / len(self.points)
-        avg_coords: Vector2 = reduce(lambda summed, point: summed + point, self.points)
+        points_len_mult = 1 / len(points)
+        avg_coords: Vector2 = reduce(lambda summed, point: summed + point, points)
         avg_coords *= points_len_mult
         return avg_coords.try_into_vec2()

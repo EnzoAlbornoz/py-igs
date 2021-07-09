@@ -8,12 +8,18 @@ if TYPE_CHECKING:
     from cairo import Context
 
 class GraphicalObject(ABC):
+    # Define Constructor
+    def __init__(self) -> None:
+        # Call Super Constructor
+        super().__init__()
+        # Define Pipeline Attributes
+        self.in_pipeline = False
     # Define Interface
     @abstractmethod
     def get_type() -> ObjectType:
         raise NotImplementedError("GraphicalObject is an abstract class.")
     @abstractmethod
-    def draw(self, cairo: Context, inherited_matrix: Matrix):
+    def draw(self, cairo: Context):
         raise NotImplementedError("GraphicalObject is an abstract class.")
     @abstractmethod
     def transform(self, transformation: Matrix):
@@ -26,3 +32,15 @@ class GraphicalObject(ABC):
         self.color = color_rgba
     def get_color(self) -> Tuple[float, float, float, float]:
         return self.color
+    # Pipeline Methods
+    @abstractmethod
+    def pipeline(self) -> None:
+        # Turn on the Pipeline
+        self.in_pipeline = True
+    @abstractmethod
+    def pipeline_apply(self) -> None:
+        # Turn off the Pipeline
+        self.in_pipeline = False
+    def pipeline_abort(self) -> None:
+        # Turn off the Pipeline
+        self.in_pipeline = False

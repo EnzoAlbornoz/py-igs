@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Tuple
 from math import atan
 
 import cairo
@@ -18,52 +18,126 @@ class Window:
         self.y_min = y_world_min
         self.x_max = x_world_max
         self.y_max = y_world_max
+        self.vec_up_x = x_world_min + ((x_world_max - x_world_min) / 2)
+        self.vec_up_y = y_world_max
     # Define Getters and Setters
     def get_width(self) -> float:
         return self.x_max - self.x_min
+    def get_inverse_width(self) -> float:
+        return 1 / self.get_width()
     def set_width(self, width: float) -> None:
-        self.x_max = self.x_min + width
+        scale_width = width / self.get_width()
+        self.scale(scale_width, 1)
 
     def get_height(self) -> float:
         return self.y_max - self.y_min
+    def get_inverse_height(self) -> float:
+        return 1 / self.get_height()
     def set_height(self, height: float) -> None:
-        self.y_max = self.y_min + height
+        scale_height = height / self.get_height()
+        self.scale(1, scale_height)
 
     def get_center(self) -> Vector2:
         # Compute Centers
-        center_x = self.x_min + (self.get_width() / 2)
-        center_y = self.y_min + (self.get_height() / 2)
+        min_point = Vector2(self.x_min, self.y_min)
+        max_point = Vector2(self.x_max, self.y_max)
         # Return as Vector
-        return Vector2(center_x, center_y)
+        return ((min_point + max_point) * 0.5).try_into_vec2()
+
+    def get_vec_up(self) -> Vector2:
+        return Vector2(self.vec_up_x, self.vec_up_y)
+    def get_vec_up_theta(self) -> float:
+        # Get Window Center
+        (center_x, center_y) = self.get_center().as_tuple()
+        # Compute Triangles Sides
+        opposite = center_x - self.vec_up_x
+        adjacent = self.vec_up_y - center_y
+        # Compute theta
+        theta = atan(opposite / adjacent)
+        return theta
     # Define Transformations
     def pan(self, dx: float = 0, dy: float = 0):
+        # Compute Delta Vectors
+        vector_delta = Vector2(dx, dy).as_vec3(1)
+        # Get Window Theta
+        vup_theta = self.get_vec_up_theta()
+        # Rotate Delta Vector
+        vector_delta *= homo_coords2_matrix_rotate(vup_theta)
+        # Cast as Vector 2
+        vector_delta = vector_delta.try_into_vec2()
         # Update Data
-        self.x_min += dx
-        self.x_max += dx
-        self.y_min += dy
-        self.y_max += dy
-    def scale(self, scale_factor: float = 1):
+        self.x_min += vector_delta.get_x()
+        self.x_max += vector_delta.get_x()
+        self.y_min += vector_delta.get_y()
+        self.y_max += vector_delta.get_y()
+        self.vec_up_x += vector_delta.get_x()
+        self.vec_up_y += vector_delta.get_y()
+
+    def scale(self, scale_factor_x: float = 1, scale_factor_y: float = 1):
         # Compute Window point as vectors
         (center_x, center_y) = self.get_center().as_tuple()
         left_bottom = Vector2(self.x_min, self.y_min)
         right_upper = Vector2(self.x_max, self.y_max)
+        vector_up = Vector2(center_x, self.y_max)
         # Translate into origin
         translate_origin = homo_coords2_matrix_translate(-center_x, -center_y)
+        # Get Up Vector theta 
+        up_vector_theta = self.get_vec_up_theta()
+        # Align Rotation
+        rotation_align = homo_coords2_matrix_rotate(-up_vector_theta)
         # Scale
-        scale_by_factor = homo_coords2_matrix_scale(scale_factor, scale_factor)
+        scale_by_factor = homo_coords2_matrix_scale(scale_factor_x, scale_factor_y)
+        # Back Rotation
+        rotation_back = homo_coords2_matrix_rotate(up_vector_theta)
         # Translate back
         translate_back = homo_coords2_matrix_translate(center_x, center_y)
         # Compute Transforms
-        left_bottom = left_bottom.as_vec3(1) * translate_origin * scale_by_factor * translate_back
-        right_upper = right_upper.as_vec3(1) * translate_origin * scale_by_factor * translate_back
+        grouped_transform = translate_origin * rotation_align * scale_by_factor * rotation_back * translate_back
+        left_bottom = left_bottom.as_vec3(1) * grouped_transform
+        right_upper = right_upper.as_vec3(1) * grouped_transform
+        vector_up = vector_up.as_vec3(1) * grouped_transform
         # Destructure Values
         (x_min, y_min) = left_bottom.try_into_vec2().as_tuple()
         (x_max, y_max) = right_upper.try_into_vec2().as_tuple()
+        (x_vup, y_vup) = vector_up.try_into_vec2().as_tuple()
         # Update Data
         self.x_min = x_min
         self.x_max = x_max
         self.y_min = y_min
         self.y_max = y_max
+        self.vec_up_x = x_vup
+        self.vec_up_y = y_vup
+    
+    def rotate(self, theta_in_radians: float = 0):
+        # Compute Window Points as Vectors
+        (center_x, center_y) = self.get_center().as_tuple()
+        left_bottom = Vector2(self.x_min, self.y_min)
+        right_upper = Vector2(self.x_max, self.y_max)
+        vector_up = Vector2(center_x, self.y_max)
+        # Translate into origin
+        translate_origin = homo_coords2_matrix_translate(-center_x, -center_y)
+        # Perform Rotation
+        rotate_theta = homo_coords2_matrix_rotate(theta_in_radians)
+        # Translate Back to Center
+        translate_back = homo_coords2_matrix_translate(center_x, center_y)
+        # Compute Transforms
+        grouped_transform = translate_origin * rotate_theta * translate_back
+        left_bottom = left_bottom.as_vec3(1) * grouped_transform
+        right_upper = right_upper.as_vec3(1) * grouped_transform
+        vector_up = vector_up.as_vec3(1) * grouped_transform
+        # Destructure Values
+        (x_min, y_min) = left_bottom.try_into_vec2().as_tuple()
+        (x_max, y_max) = right_upper.try_into_vec2().as_tuple()
+        (x_vup, y_vup) = vector_up.try_into_vec2().as_tuple()
+        # Update Data
+        self.x_min = x_min
+        self.x_max = x_max
+        self.y_min = y_min
+        self.y_max = y_max
+        self.vec_up_x = x_vup
+        self.vec_up_y = y_vup
+
+
     # Define Normalized World Coordinates System
     def as_normalized_coordinates_transform(self):
         # Define World Center
@@ -71,22 +145,33 @@ class Window:
         (center_x, center_y) = world_center.as_tuple()
         # Translate World Center to Origin
         translate_origin = homo_coords2_matrix_translate(-center_x, -center_y)
-        # Define Tetha
-        opposite = center_x - self.x_min
-        adjacent = self.y_max - center_y
-        vup_tetha = atan(opposite / adjacent)
+        # Define theta
+        vector_up_theta = self.get_vec_up_theta()
         # Rotate World
-        rotate_minus_theta = homo_coords2_matrix_rotate(-vup_tetha)
-        # Translate Back To Position
-        translate_back = homo_coords2_matrix_translate(center_x, center_y)
+        rotate_minus_theta = homo_coords2_matrix_rotate(-vector_up_theta)
+        # Normalize By Window Size
+        normalize_scale = homo_coords2_matrix_scale((2 * self.get_inverse_width()), (2 * self.get_inverse_height()))
         # Return as Transform
-        return translate_origin * rotate_minus_theta * translate_back
+        return translate_origin * rotate_minus_theta * normalize_scale
 
     # Define Rendering
-    def draw(self, cairo: cairo.Context, display_file: DisplayFile, inherited_transform: Matrix) -> None:
+    def draw(self, cairo: cairo.Context, display_file: DisplayFile, viewport_transform: Matrix) -> None:
+        # Compute Normalized Coordinates for the Window
+        normalize = self.as_normalized_coordinates_transform()
         # Draw Display File Objects
         for drawable_object in display_file.get_drawable_objects():
-            # Draw Object
-            drawable_object.draw(cairo, inherited_transform)
+            # Draw Object - Start Pipeline
+            drawable_object.pipeline()
+            # print(drawable_object)
+            # Normalize - World -> Generic Window
+            drawable_object.transform(normalize)
+            # Future Feature - Clipping
+            # print(drawable_object)
+            # Viewport - Generic Window -> Device Window
+            drawable_object.transform(viewport_transform)
+            # Draw in Device Window
+            drawable_object.draw(cairo)
+            # End Pipeline
+            drawable_object.pipeline_abort()
             # Reset Color
             cairo.set_source_rgba(1, 1, 1, 1)

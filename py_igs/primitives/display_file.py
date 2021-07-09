@@ -57,6 +57,8 @@ class DisplayFile:
         rotation_dg: float, rotation_point_x: float, rotation_point_y: float,
         scale_perc_x: float, scale_perc_y: float
     ):
+        # Initialize Pipeline for Object
+        self.get_object_ref(object_name).pipeline()
         # Create Transformation Matrix
         transform_matrix = homo_coords2_matrix_identity()
         #  Check Rotation
@@ -84,4 +86,6 @@ class DisplayFile:
             transform_matrix *= homo_coords2_matrix_translate(translate_x, translate_y)
         # Apply Transformation
         self.get_object_ref(object_name).transform(transform_matrix)
+        # Persist Transform
+        self.get_object_ref(object_name).pipeline_apply()
             
