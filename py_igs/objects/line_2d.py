@@ -2,10 +2,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from primitives.graphical_object import GraphicalObject
 from objects.object_type import ObjectType
-from primitives.vec2 import Vector2
 if TYPE_CHECKING:
     from cairo import Context
-    from primitives.matrix import Matrix
+    from primitives.matrix import Matrix, Vector2
 
 class Line2D(GraphicalObject):
     # Define Constructor
@@ -21,7 +20,8 @@ class Line2D(GraphicalObject):
     def __str__(self) -> str:
         if self.in_pipeline:
             return f"[({self.pipeline_point_a.get_x()}, {self.pipeline_point_a.get_y()}), ({self.pipeline_point_b.get_x()}, {self.pipeline_point_b.get_y()})]"
-            
+        else:
+            return f"[({self.point_a.get_x()}, {self.point_a.get_y()}), ({self.point_b.get_x()}, {self.point_b.get_y()})]"
     # Type Definition
     @staticmethod
     def get_type() -> ObjectType:
@@ -68,6 +68,8 @@ class Line2D(GraphicalObject):
             # Raw Transform
             self.point_a = (self.point_a.as_vec3(1) * transformation).try_into_vec2()
             self.point_b = (self.point_b.as_vec3(1) * transformation).try_into_vec2()
+        # Return Chain
+        return self
 
     def get_center_coords(self) -> Vector2:
         # Get Points

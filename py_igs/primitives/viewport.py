@@ -2,7 +2,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import cairo
 from primitives.matrix import Matrix, homo_coords2_matrix_scale, homo_coords2_matrix_translate
-from primitives.vec2 import Vector2
 from primitives.window import Window
 if TYPE_CHECKING:
     from primitives.display_file import DisplayFile
@@ -15,9 +14,9 @@ class Viewport:
         self.y_min = y_viewport_min
         self.x_max = x_viewport_max
         self.y_max = y_viewport_max
-        self.window: Window = None
+        self.window: Window | None = None
     # Define Getter and Setters
-    def get_window(self) -> Window:
+    def get_window(self) -> Window | None:
         return self.window
     def set_window(self, window: Window) -> None:
         self.window = window
@@ -28,6 +27,9 @@ class Viewport:
         # Check Value
         if width <= 0:
             raise ValueError("The width can only be positive")
+        # Check Window
+        if self.window is None:
+            raise RuntimeError("Window is None")
         # Try to Coerse Window
         if coerse_window:
             # Compute Scale
@@ -42,6 +44,9 @@ class Viewport:
         # Check Value
         if height <= 0:
             raise ValueError("The height can only be positive")
+        # Check Window
+        if self.window is None:
+            raise RuntimeError("Window is None")
         # Try to Coerse Window
         if coerse_window:
             # Compute Scale
@@ -51,13 +56,24 @@ class Viewport:
         self.y_max = self.y_min + height
 
     def get_scale(self) -> float:
+        # Check Window
+        if self.window is None:
+            raise RuntimeError("Window is None")
+        # Return Scale
         return self.get_width() / self.window.get_width()
 
     def get_inverse_scale(self) -> float:
+        # Check Window
+        if self.window is None:
+            raise RuntimeError("Window is None")
+        # Return Scale
         return self.window.get_width() / self.get_width()
 
     # Define Basic Matrix Transformations
     def as_transform(self) -> Matrix:
+        # Check Window
+        if self.window is None:
+            raise RuntimeError("Window is None")
         # Translate into Origin
         to_origin = homo_coords2_matrix_translate(-self.window.x_min, -self.window.y_min)
         # Denormalize 
@@ -86,5 +102,7 @@ class Viewport:
     def draw(self, cairo: cairo.Context, display_file: DisplayFile) -> None:
         # Compute Viewport Transform for a Normalized Window
         viewport_transform = self.as_normalized_transform()
-        # Call Draw on Window
-        self.window.draw(cairo, display_file, viewport_transform)
+        # Check Window
+        if self.window is not None:
+            # Call Draw on Window
+            self.window.draw(cairo, display_file, viewport_transform)

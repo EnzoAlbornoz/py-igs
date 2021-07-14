@@ -1,10 +1,9 @@
 from __future__ import annotations
-from cairo import Matrix
 from typing import TYPE_CHECKING, Tuple
 from abc import ABC, abstractmethod
 from objects.object_type import ObjectType
+from primitives.matrix import Matrix, Vector2
 if TYPE_CHECKING:
-    from primitives.vec2 import Vector2
     from cairo import Context
 
 class GraphicalObject(ABC):
@@ -12,6 +11,8 @@ class GraphicalObject(ABC):
     def __init__(self) -> None:
         # Call Super Constructor
         super().__init__()
+        # Define Color Attributes
+        self.color = (1,1,1,1)
         # Define Pipeline Attributes
         self.in_pipeline = False
     # Define Interface
@@ -19,10 +20,10 @@ class GraphicalObject(ABC):
     def get_type() -> ObjectType:
         raise NotImplementedError("GraphicalObject is an abstract class.")
     @abstractmethod
-    def draw(self, cairo: Context):
+    def draw(self, cairo: Context) -> None:
         raise NotImplementedError("GraphicalObject is an abstract class.")
     @abstractmethod
-    def transform(self, transformation: Matrix):
+    def transform(self, transformation: Matrix) -> GraphicalObject:
         raise NotImplementedError("GraphicalObject is an abstract class.")
     @abstractmethod
     def get_center_coords(self) -> Vector2:

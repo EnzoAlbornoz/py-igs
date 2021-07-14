@@ -4,8 +4,7 @@ from objects.object_type import ObjectType
 from primitives.graphical_object import GraphicalObject
 if TYPE_CHECKING:
     from cairo import Context
-    from primitives.matrix import Matrix
-    from primitives.vec2 import Vector2
+    from primitives.matrix import Matrix, Vector2
 
 class Point2D(GraphicalObject):
     # Define Constructor
@@ -57,6 +56,8 @@ class Point2D(GraphicalObject):
         else:
             # Raw Transform
             self.point = (self.point.as_vec3(1) * transformation).try_into_vec2()
+        # Return Chain
+        return self
 
     def get_center_coords(self) -> Vector2:
         return self.point

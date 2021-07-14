@@ -1,3 +1,9 @@
+# pyright: reportUnknownMemberType=false
+# pyright: reportMissingTypeStubs=false
+# pyright: reportGeneralTypeIssues=false
+# pyright: reportUntypedBaseClass=false
+# pyright: reportUntypedBaseClass=false
+# pyright: reportUnknownParameterType=false
 # Initialization File
 # Should import main dependencies and create instantiate the application window
 # Import Dependencies
@@ -13,7 +19,6 @@ from gi.repository import Gtk
 from application_window import ApplicationWindow
 # Define Constants
 _APPLICATION_ID="br.ufsc.py-igs"
-what_is = lambda obj: print(type(obj), "\n\t"+"\n\t".join(dir(obj)))
 # Define Application
 class Application(Gtk.Application):
     # Define Constructor -------------------------------------------------------

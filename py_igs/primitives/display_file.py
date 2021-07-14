@@ -2,10 +2,9 @@ from __future__ import annotations
 from typing import Dict, List, TYPE_CHECKING, Tuple
 
 from math import radians
-from primitives.matrix import homo_coords2_matrix_identity, homo_coords2_matrix_rotate, homo_coords2_matrix_scale, homo_coords2_matrix_translate
-from primitives.vec2 import Vector2
+from objects.wireframe_2d import Wireframe2D
+from primitives.matrix import Vector2, homo_coords2_matrix_identity, homo_coords2_matrix_rotate, homo_coords2_matrix_scale, homo_coords2_matrix_translate
 if TYPE_CHECKING:
-    from primitives.matrix import Matrix
     from primitives.graphical_object import GraphicalObject
     from objects.object_type import ObjectType
 class DisplayFile:
@@ -15,17 +14,18 @@ class DisplayFile:
         self.objects: Dict[str, Tuple[ObjectType, GraphicalObject]] = {}
         for (object_name, object_type, object_ref) in objects:
             self.objects[object_name] = (object_type, object_ref)
+        self.add_object("test", Wireframe2D(Vector2(0,0), Vector2(50, 100), Vector2(100, 0)))
     # Define Methods
     def get_names(self) -> List[str]:
         # Destructure List
-        return self.objects.keys()
+        return list(self.objects.keys())
 
     def get_objects(self) -> List[Tuple[str, ObjectType, GraphicalObject]]:
         return [(object_name, object_type, object_ref) for (object_name, (object_type, object_ref)) in self.objects.items()]
 
     def get_drawable_objects(self) -> List[GraphicalObject]:
         # Destructure List
-        return [object_ref for (_object_type, object_ref) in self.objects.values()]
+        return [object_ref for (_, object_ref) in self.objects.values()]
     
     def add_object(self, object_name: str, object_graphics: GraphicalObject) -> None:
         # Check if already exists
@@ -35,15 +35,15 @@ class DisplayFile:
         else:
             raise ValueError("Name already in display file")
 
-    def get_object(self, object_name):
+    def get_object(self, object_name: str):
         # Get Data
         (object_type, object_ref) = self.objects[object_name]
         # Return Full "Row"
         return (object_name, object_type, object_ref)
 
-    def get_object_ref(self, object_name):
+    def get_object_ref(self, object_name: str):
         # Get Data
-        (_object_type, object_ref) = self.objects[object_name]
+        (_, object_ref) = self.objects[object_name]
         # Return Full "Row"
         return object_ref
 

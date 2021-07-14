@@ -1,12 +1,10 @@
 from __future__ import annotations
-from typing import List, TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING
 from objects.object_type import ObjectType
 from primitives.graphical_object import GraphicalObject
-from functools import reduce
 if TYPE_CHECKING:
     from cairo import Context
-    from primitives.matrix import Matrix
-    from primitives.vec2 import Vector2
+    from primitives.matrix import Matrix, Vector2
 
 class Wireframe2D(GraphicalObject):
     # Define Constructor
@@ -20,6 +18,11 @@ class Wireframe2D(GraphicalObject):
         self.points = list(points)
         # Define Pipeline Attributes
         self.pipeline_points = list(points)
+    def __str__(self) -> str:
+        desc = "Wireframe2D\n"
+        for point in (self.pipeline_points if self.in_pipeline else self.points):
+            desc += "\t" + point.__str__() + "\n"
+        return desc
     # Type Definition
     @staticmethod
     def get_type() -> ObjectType:
@@ -77,12 +80,16 @@ class Wireframe2D(GraphicalObject):
                 (point.as_vec3(1) * transformation).try_into_vec2()
                 for point in self.points
             ]
+        # Return Chain
+        return self
 
     def get_center_coords(self) -> Vector2:
         # Get Points
         points = self.pipeline_points if self.in_pipeline else self.points
         # Get Avg Point
         points_len_mult = 1 / len(points)
-        avg_coords: Vector2 = reduce(lambda summed, point: summed + point, points)
+        avg_coords = Vector2(0, 0)
+        for point in points:
+            avg_coords += point
         avg_coords *= points_len_mult
         return avg_coords.try_into_vec2()

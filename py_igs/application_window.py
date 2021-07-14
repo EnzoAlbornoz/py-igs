@@ -1,8 +1,17 @@
+# pyright: reportUnknownMemberType=false
+# pyright: reportMissingTypeStubs=false
+# pyright: reportGeneralTypeIssues=false
+# pyright: reportUntypedBaseClass=false
+# pyright: reportUntypedBaseClass=false
+# pyright: reportUnknownParameterType=false
+# pyright: reportUntypedClassDecorator=false
+# pyright: reportUntypedFunctionDecorator=false
 # Import Dependencies
+from typing import Any, List
 import gi
-from math import fmod
+from math import fmod, radians
 from sys import float_info
-from enum import IntEnum, auto, unique
+from enum import IntEnum, unique
 from gi.repository import Gtk, Gdk
 from cairo import Context
 from helpers import extract_points_as_vec2_from_box, gdk_rgba_as_tuple, parse_text_into_points_2d
@@ -10,8 +19,8 @@ from objects.line_2d import Line2D
 from objects.point_2d import Point2D
 from objects.wireframe_2d import Wireframe2D
 from primitives.display_file import DisplayFile
-from primitives.matrix import Matrix
-from primitives.vec2 import Vector2
+from primitives.graphical_object import GraphicalObject
+from primitives.matrix import Vector2
 from primitives.viewport import Viewport
 from primitives.window import Window
 # Setup Graphic
@@ -29,42 +38,42 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     # Define Mount Point
     __gtype_name__ = "window-root"
     # Define Widgets
-    widget_logger = Gtk.Template.Child("widget-logger-content")
-    widget_logger_scroll = Gtk.Template.Child("widget-logger-historic")
-    widget_canvas = Gtk.Template.Child("viewport-canvas")
-    widget_objects_tree = Gtk.Template.Child("widget-objects-view")
-    widget_objects_actions_remove = Gtk.Template.Child("widget-objects-actions-remove")
-    widget_objects_actions_edit = Gtk.Template.Child("widget-objects-actions-edit")
+    widget_logger: Any = Gtk.Template.Child("widget-logger-content")
+    widget_logger_scroll: Any = Gtk.Template.Child("widget-logger-historic")
+    widget_canvas: Any = Gtk.Template.Child("viewport-canvas")
+    widget_objects_tree: Any = Gtk.Template.Child("widget-objects-view")
+    widget_objects_actions_remove: Any = Gtk.Template.Child("widget-objects-actions-remove")
+    widget_objects_actions_edit: Any = Gtk.Template.Child("widget-objects-actions-edit")
     # Define Dialogs
-    dialog_object_add = Gtk.Template.Child("window-object-add")
-    dialog_object_add_object_name = Gtk.Template.Child("window-object-add-name-entry")
-    dialog_object_add_object_color = Gtk.Template.Child("window-object-add-color-value")
-    dialog_object_add_tab_point_coords = Gtk.Template.Child("window-object-add-point-coords")
-    dialog_object_add_tab_line_coords = Gtk.Template.Child("window-object-add-line-coords")
-    dialog_object_add_tab_wireframe_coords = Gtk.Template.Child("window-object-add-wireframe-coords")
-    dialog_object_add_tab_text_coords = Gtk.Template.Child("window-object-add-text-value")
-    dialog_object_add_btn_save = Gtk.Template.Child("window-object-add-btn-save")
+    dialog_object_add: Any = Gtk.Template.Child("window-object-add")
+    dialog_object_add_object_name: Any = Gtk.Template.Child("window-object-add-name-entry")
+    dialog_object_add_object_color: Any = Gtk.Template.Child("window-object-add-color-value")
+    dialog_object_add_tab_point_coords: Any = Gtk.Template.Child("window-object-add-point-coords")
+    dialog_object_add_tab_line_coords: Any = Gtk.Template.Child("window-object-add-line-coords")
+    dialog_object_add_tab_wireframe_coords: Any = Gtk.Template.Child("window-object-add-wireframe-coords")
+    dialog_object_add_tab_text_coords: Any = Gtk.Template.Child("window-object-add-text-value")
+    dialog_object_add_btn_save: Any = Gtk.Template.Child("window-object-add-btn-save")
 
-    dialog_object_edit = Gtk.Template.Child("window-object-edit")
-    dialog_object_edit_rotate_around_center = Gtk.Template.Child("window-object-edit-rotate-around-center")
-    dialog_object_edit_rotate_around_origin = Gtk.Template.Child("window-object-edit-rotate-around-origin")
-    dialog_object_edit_rotate_around_point = Gtk.Template.Child("window-object-edit-rotate-around-point")
-    dialog_object_edit_rotate_x_value = Gtk.Template.Child("window-object-edit-rotate-x-value")
-    dialog_object_edit_rotate_y_value = Gtk.Template.Child("window-object-edit-rotate-y-value")
+    dialog_object_edit: Any = Gtk.Template.Child("window-object-edit")
+    dialog_object_edit_rotate_around_center: Any = Gtk.Template.Child("window-object-edit-rotate-around-center")
+    dialog_object_edit_rotate_around_origin: Any = Gtk.Template.Child("window-object-edit-rotate-around-origin")
+    dialog_object_edit_rotate_around_point: Any = Gtk.Template.Child("window-object-edit-rotate-around-point")
+    dialog_object_edit_rotate_x_value: Any = Gtk.Template.Child("window-object-edit-rotate-x-value")
+    dialog_object_edit_rotate_y_value: Any = Gtk.Template.Child("window-object-edit-rotate-y-value")
 
-    dialog_about = Gtk.Template.Child("window-about")
+    dialog_about: Any = Gtk.Template.Child("window-about")
     # Global Attributes
-    g_nav_adjustment_zoom = Gtk.Template.Child("g-widget-navigation-nav-adjustment-zoom")
-    g_nav_adjustment_pan = Gtk.Template.Child("g-widget-navigation-nav-adjustment-pan")
-    g_tree_objects_store = Gtk.Template.Child("g-widget-objects-tree-store")
+    g_nav_adjustment_zoom: Any = Gtk.Template.Child("g-widget-navigation-nav-adjustment-zoom")
+    g_nav_adjustment_pan: Any = Gtk.Template.Child("g-widget-navigation-nav-adjustment-pan")
+    g_tree_objects_store: Any = Gtk.Template.Child("g-widget-objects-tree-store")
 
-    g_adj_dialog_edit_translate_x = Gtk.Template.Child("g-window-object-edit-translate-adjustment-x")
-    g_adj_dialog_edit_translate_y = Gtk.Template.Child("g-window-object-edit-translate-adjustment-y")
-    g_adj_dialog_edit_rotate_amount = Gtk.Template.Child("g-window-object-edit-rotate-adjustment-amount")
-    g_adj_dialog_edit_rotate_around_x = Gtk.Template.Child("g-window-object-edit-rotate-around-adjustment-x")
-    g_adj_dialog_edit_rotate_around_y = Gtk.Template.Child("g-window-object-edit-rotate-around-adjustment-y")
-    g_adj_dialog_edit_scale_x = Gtk.Template.Child("g-window-object-edit-scale-adjustment-x")
-    g_adj_dialog_edit_scale_y = Gtk.Template.Child("g-window-object-edit-scale-adjustment-y")
+    g_adj_dialog_edit_translate_x: Any = Gtk.Template.Child("g-window-object-edit-translate-adjustment-x")
+    g_adj_dialog_edit_translate_y: Any = Gtk.Template.Child("g-window-object-edit-translate-adjustment-y")
+    g_adj_dialog_edit_rotate_amount: Any = Gtk.Template.Child("g-window-object-edit-rotate-adjustment-amount")
+    g_adj_dialog_edit_rotate_around_x: Any = Gtk.Template.Child("g-window-object-edit-rotate-around-adjustment-x")
+    g_adj_dialog_edit_rotate_around_y: Any = Gtk.Template.Child("g-window-object-edit-rotate-around-adjustment-y")
+    g_adj_dialog_edit_scale_x: Any = Gtk.Template.Child("g-window-object-edit-scale-adjustment-x")
+    g_adj_dialog_edit_scale_y: Any = Gtk.Template.Child("g-window-object-edit-scale-adjustment-y")
     # Define Constructor
     def __init__(self, *args, **kwargs) -> None:
         # Call Super Constructor
@@ -106,6 +115,9 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         return self.viewport
     @Gtk.Template.Callback("on-canvas-draw")
     def on_canvas_draw(self, _widget, ctx: Context):
+        # Viewport Check
+        if self.viewport is None:
+            return
         # Clear Screen
         ctx.set_source_rgb(0, 0, 0)
         ctx.rectangle(0, 0 , self.viewport.get_width(), self.viewport.get_height())
@@ -127,11 +139,15 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         adjustment.set_value(v_adjust_to)
     # Define Signals
     @Gtk.Template.Callback("on-canvas-configure")
-    def on_canvas_configure(self, _widget, event):
+    def on_canvas_configure(self, _widget, event: Any):
         # Resize Viewport
         if self.viewport is None:
-            self.viewport = Viewport(0, 0, event.width, event.height)
-            self.viewport.set_window(Window(0, 0, event.width, event.height))
+            width = event.width
+            half_width = (width / 2)
+            height = event.height
+            half_height = (height / 2)
+            self.viewport = Viewport(0, 0, width, height)
+            self.viewport.set_window(Window(-half_width, -half_height, half_width, half_height))
         else:
             self.viewport.set_width(event.width, True)
             self.viewport.set_height(event.height, True)
@@ -141,6 +157,9 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     # Pan Handlers
     @Gtk.Template.Callback("on-btn-clicked-move-up")
     def on_btn_clicked_move_up(self, _button):
+        # Check Viewport and Window
+        if self.viewport is None or self.viewport.window is None:
+            return
         # Get Pan Step
         pan_step = self.g_nav_adjustment_pan.get_value()
         # Pan Window Up
@@ -151,6 +170,9 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         self.console_log(f"[Navigation] Moved {pan_step} to top")
     @Gtk.Template.Callback("on-btn-clicked-move-down")
     def on_btn_clicked_move_down(self, _button):
+        # Check Viewport and Window
+        if self.viewport is None or self.viewport.window is None:
+            return
         # Get Pan Step
         pan_step = self.g_nav_adjustment_pan.get_value()
         # Pan Window Down
@@ -161,6 +183,9 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         self.console_log(f"[Navigation] Moved {pan_step} to bottom")
     @Gtk.Template.Callback("on-btn-clicked-move-left")
     def on_btn_clicked_move_left(self, _button):
+        # Check Viewport and Window
+        if self.viewport is None or self.viewport.window is None:
+            return
         # Get Pan Step
         pan_step = self.g_nav_adjustment_pan.get_value()
         # Pan Window Left
@@ -171,6 +196,9 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         self.console_log(f"[Navigation] Moved {pan_step} to left")
     @Gtk.Template.Callback("on-btn-clicked-move-right")
     def on_btn_clicked_move_right(self, _button):
+        # Check Viewport and Window
+        if self.viewport is None or self.viewport.window is None:
+            return
         # Get Pan Step
         pan_step = self.g_nav_adjustment_pan.get_value()
         # Pan Window Right
@@ -183,71 +211,105 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     # Zoom Handlers
     @Gtk.Template.Callback("on-btn-clicked-zoom-in")
     def on_btn_clicked_zoom_in(self, _button):
+        # Check Viewport and Window
+        if self.viewport is None or self.viewport.window is None:
+            return
         # Get Zoom Diff
         adjustment_ammount = self.g_nav_adjustment_zoom.get_value()
-        zoom_ammount = (adjustment_ammount / 100)
+        zoom_ammount = 1 - (adjustment_ammount / 100)
         # Zoom In
-        self.viewport.window.scale(1 - zoom_ammount)
+        self.viewport.window.scale(zoom_ammount, zoom_ammount)
         # Force Redraw
         self.widget_canvas.queue_draw()
         # Log
         self.console_log(f"[Navigation] Zoomed in {adjustment_ammount}%")
     @Gtk.Template.Callback("on-btn-clicked-zoom-out")
     def on_btn_clicked_zoom_out(self, _button):
+        # Check Viewport and Window
+        if self.viewport is None or self.viewport.window is None:
+            return
         # Get Zoom Diff
         adjustment_ammount = self.g_nav_adjustment_zoom.get_value()
-        zoom_ammount = (adjustment_ammount / 100)
+        zoom_ammount = 1 + (adjustment_ammount / 100)
         # Zoom Out
-        self.viewport.window.scale(1 + zoom_ammount)
+        self.viewport.window.scale(zoom_ammount, zoom_ammount)
         # Force Redraw
         self.widget_canvas.queue_draw()
         # Log
         self.console_log(f"[Navigation] Zoomed out {adjustment_ammount}%")
     @Gtk.Template.Callback("on-canvas-scroll")
     def on_canvas_scroll(self, _canvas, event):
+        # Check Viewport and Window
+        if self.viewport is None or self.viewport.window is None:
+            return
         # Get Zoom Diff
         zoom_ammount = (self.g_nav_adjustment_zoom.get_value() / 100)
         # Check Zoom Direction
         if event.direction == Gdk.ScrollDirection.UP:
             # Zoom In
-            self.viewport.window.scale(1 - zoom_ammount)
+            self.viewport.window.scale(1 - zoom_ammount, 1 - zoom_ammount)
         elif event.direction == Gdk.ScrollDirection.DOWN:
             # Zoom Out
-            self.viewport.window.scale(1 + zoom_ammount)
+            self.viewport.window.scale(1 + zoom_ammount, 1 + zoom_ammount)
         else:
             raise ValueError(f"Scroll direction {event.direction} is not valid!")
         # Force Redraw
         self.widget_canvas.queue_draw()
-        
+
+    # Rotation Handlers
+    @Gtk.Template.Callback("on-btn-clicked-rotate-counterclockwise")
+    def on_btn_clicked_rotate_counterclockwise(self, _button):
+        # Check Viewport and Window
+        if self.viewport is None or self.viewport.window is None:
+            return
+        # Rotate Right
+        self.viewport.window.rotate(radians(-45))
+        # Force Redraw
+        self.widget_canvas.queue_draw()
+    @Gtk.Template.Callback("on-btn-clicked-rotate-clockwise")
+    def on_btn_clicked_rotate_clockwise(self, _button):
+        # Check Viewport and Window
+        if self.viewport is None or self.viewport.window is None:
+            return
+        # Rotate Left
+        self.viewport.window.rotate(radians(45))
+        # Force Redraw
+        self.widget_canvas.queue_draw()
 
     # Drag Handlers  
     @Gtk.Template.Callback("on-canvas-drag-start")
-    def on_canvas_drag_start(self, _canvas, event):
+    def on_canvas_drag_start(self, _canvas, event: Any):
+        # Check Viewport and Window
+        if self.viewport is None or self.viewport.window is None:
+            return
         # Start Capturing Drag Data
         self.drag_coords = Vector2(event.x_root, event.y_root)
         # Get Display
-        display = self.get_screen().get_display()
+        display: Any = self.get_screen().get_display()
         # Get Cursor
-        cursor_grabbing = Gdk.Cursor.new_from_name(display, "grabbing")
+        cursor_grabbing: Any = Gdk.Cursor.new_from_name(display, "grabbing")
         # Hijack Cursor
         seat = display.get_default_seat()
         seat.grab(self.get_window(), Gdk.SeatCapabilities.POINTER, True, cursor_grabbing, event, None, None)
     @Gtk.Template.Callback("on-canvas-drag-end")
     def on_canvas_drag_end(self, _canvas, event):
         # Get Display
-        display = self.get_screen().get_display()
+        display: Any = self.get_screen().get_display()
         # Stop Grabbing
         seat = display.get_default_seat()
         seat.ungrab()
         # Stop Capturing Drag Data
         self.drag_coords = None
     @Gtk.Template.Callback("on-window-mouse-release")
-    def on_window_mouse_release(self, _window, event):
+    def on_window_mouse_release(self, _window, event: Any):
         if not self.drag_coords is None:
             # Pipe Event
             self.on_canvas_drag_end(self.widget_canvas, event)
     @Gtk.Template.Callback("on-canvas-mouse-motion")
-    def on_canvas_drag_motion(self, _canvas, event):
+    def on_canvas_drag_motion(self, _canvas, event: Any):
+        # Check Viewport and Window
+        if self.viewport is None or self.viewport.window is None:
+            return
         # Check Draging
         if not self.drag_coords is None:
             # Get Event Drag Coords
@@ -272,9 +334,9 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     @Gtk.Template.Callback("on-canvas-mouse-enter")
     def on_canvas_mouse_enter(self, _canvas, _event):
         # Get Display
-        display = self.get_screen().get_display()
+        display: Any = self.get_screen().get_display()
         # Get Cursor
-        cursor_grabbing = Gdk.Cursor.new_from_name(display, "grab")
+        cursor_grabbing: Any = Gdk.Cursor.new_from_name(display, "grab")
         # Change Cursor
         self.get_window().set_cursor(cursor_grabbing)
     @Gtk.Template.Callback("on-canvas-mouse-leave")
@@ -329,7 +391,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
             for box_coords_element in box_coords.get_children():
                 if isinstance(box_coords_element, Gtk.SpinButton):
                     # Configure Buttons
-                    box_coords_element_adjustment = Gtk.Adjustment.new(0, -float_info.max, float_info.max, 1, 10, 0)
+                    box_coords_element_adjustment: Any = Gtk.Adjustment.new(0, -float_info.max, float_info.max, 1, 10, 0)
                     box_coords_element.set_adjustment(box_coords_element_adjustment)
                     box_coords_element.set_numeric(True)
         for box_coords in self.dialog_object_add_tab_line_coords.get_children():
@@ -351,7 +413,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         # Reset Text
         self.dialog_object_add_object_name.set_text("")
         # Reset Color
-        color_white = Gdk.RGBA()
+        color_white: Any = Gdk.RGBA()
         self.dialog_object_add_object_color.set_rgba(color_white)
         self.add_object_current_color = color_white
         # Set Default Settings
@@ -362,7 +424,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         self.dialog_object_add.show()
     
     @Gtk.Template.Callback("on-notebook-page-change-object-type")
-    def on_notebook_page_change_object_type(self, _notebook, page, page_num):
+    def on_notebook_page_change_object_type(self, _notebook, page, page_num: int):
         # Save Selected Page
         self.add_object_current_type_page = page
         # Save Selected Type Too
@@ -393,7 +455,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         # Ignore if canceling
         if response_id == Gtk.ResponseType.OK:
             # Define Object to Add
-            object_to_build = None
+            object_to_build: GraphicalObject = None
             # Check Type of Page
             if self.add_object_current_type == DialogObjectType.POINT:
                 # Get Points
@@ -410,7 +472,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
                 points = extract_points_as_vec2_from_box(self.dialog_object_add_tab_wireframe_coords)
                 # Build Object
                 object_to_build = Wireframe2D(*points)
-            elif self.add_object_current_type == None:
+            elif self.add_object_current_type is None:
                 # Get Text
                 points_text = self.dialog_object_add_tab_text_coords.get_text()
                 # Get Points
@@ -445,7 +507,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     @Gtk.Template.Callback("on-dialog-object-add-name-entry-changed")
     def on_dialog_object_add_name_entry_changed(self, entry):
         # Check Entry Value
-        object_name = entry.get_text()
+        object_name: str = entry.get_text()
         if (
             # Check If Name is Valid
             len(object_name) < 1 or
@@ -461,16 +523,16 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     @Gtk.Template.Callback("on-dialog-object-add-btn-add-vertex")
     def on_dialog_object_add_btn_add_vertex(self, _button):
         # Create Vertex Box
-        vertex_box = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 8)
+        vertex_box: Any = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 8)
         # Create Labels
-        vertex_label_x = Gtk.Label.new("X: ")
-        vertex_label_y = Gtk.Label.new("Y: ")
+        vertex_label_x: Any = Gtk.Label.new("X: ")
+        vertex_label_y: Any = Gtk.Label.new("Y: ")
         # Create Spin Button Adjustments
-        spin_adjustment_x = Gtk.Adjustment.new(0, -float_info.max, float_info.max, 1, 10, 0)
-        spin_adjustment_y = Gtk.Adjustment.new(0, -float_info.max, float_info.max, 1, 10, 0)
+        spin_adjustment_x: Any = Gtk.Adjustment.new(0, -float_info.max, float_info.max, 1, 10, 0)
+        spin_adjustment_y: Any = Gtk.Adjustment.new(0, -float_info.max, float_info.max, 1, 10, 0)
         # Create Spin Button
-        spin_button_x = Gtk.SpinButton.new(spin_adjustment_x, 1, 0)
-        spin_button_y = Gtk.SpinButton.new(spin_adjustment_y, 1, 0)
+        spin_button_x: Any = Gtk.SpinButton.new(spin_adjustment_x, 1, 0)
+        spin_button_y: Any = Gtk.SpinButton.new(spin_adjustment_y, 1, 0)
         # Configure Spins
         spin_button_x.set_numeric(True)
         spin_button_y.set_numeric(True)
@@ -480,7 +542,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
             self.add_object_wireframe_extra_points.remove(vertex_box)
             # Destroy
             vertex_box.destroy()
-        destroy_button = Gtk.Button.new_with_label("🗑")
+        destroy_button: Any = Gtk.Button.new_with_label("🗑")
         destroy_button.connect("clicked", destroy_vertex)
         # Add Children to Box
         vertex_box.pack_start(vertex_label_x, False, True, 0)
@@ -501,7 +563,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
             # Destroy Box
             vertex_box.destroy()
         # Clear List Refs
-        self.add_object_wireframe_extra_points = []
+        self.add_object_wireframe_extra_points: List[Any] = []
 
     # Handle Menu Bar
     @Gtk.Template.Callback("on-global-menu-btn-about")
