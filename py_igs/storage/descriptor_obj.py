@@ -193,7 +193,7 @@ class DescriptorOBJ:
                                 materials[current_reading_material] = (kd_r, kd_g, kd_b)
                             else:
                                 # No Behaviour
-                                print(f"Unrecognized line: '{mat_file}'")
+                                print(f"Unrecognized line: '{mat_line}'")
                 elif line.startswith("usemtl"):
                     # Use Material
                     _, material_name = [el for el in line.split(" ") if len(el) > 0]

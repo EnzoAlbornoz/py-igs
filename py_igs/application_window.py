@@ -132,7 +132,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         if self.viewport is None:
             return
         # Clear Screen
-        ctx.set_source_rgb(0, 0, 0)
+        ctx.set_source_rgb(0.5, 0.5, 0.5)
         ctx.rectangle(0, 0 , self.viewport.get_width(), self.viewport.get_height())
         ctx.fill()
         # Print New Screen
