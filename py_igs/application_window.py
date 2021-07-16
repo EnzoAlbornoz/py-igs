@@ -10,6 +10,7 @@
 from typing import Any, List
 import gi
 from math import fmod, radians
+from os import getcwd
 from sys import float_info
 from enum import IntEnum, unique
 from gi.repository import Gtk, Gdk
@@ -23,6 +24,7 @@ from primitives.graphical_object import GraphicalObject
 from primitives.matrix import Vector2
 from primitives.viewport import Viewport
 from primitives.window import Window
+from storage.descriptor_obj import DescriptorOBJ
 # Setup Graphic
 gi.require_version("Gtk", "3.0")
 gi.require_foreign("cairo")
@@ -62,6 +64,8 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     dialog_object_edit_rotate_y_value: Any = Gtk.Template.Child("window-object-edit-rotate-y-value")
 
     dialog_about: Any = Gtk.Template.Child("window-about")
+
+    dialog_scene_loader: Any = Gtk.Template.Child("window-scene-loader")
     # Global Attributes
     g_nav_adjustment_zoom: Any = Gtk.Template.Child("g-widget-navigation-nav-adjustment-zoom")
     g_nav_adjustment_pan: Any = Gtk.Template.Child("g-widget-navigation-nav-adjustment-pan")
@@ -101,6 +105,8 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         self.add_object_wireframe_extra_points = []
         # Init White Color
         self.add_object_current_color = Gdk.RGBA()
+        # Define Variables to Handle Scene Load
+        self.scene_file_name = None
     # Define Sync Functions
     def sync_object_tree(self):
         # Clear Object Store
@@ -451,7 +457,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         self.dialog_object_add.response(Gtk.ResponseType.OK)
 
     @Gtk.Template.Callback("on-dialog-add-objects-response")
-    def on_dialog_add_objects_response(self, _dialog, response_id):
+    def on_dialog_add_objects_response(self, dialog, response_id):
         # Ignore if canceling
         if response_id == Gtk.ResponseType.OK:
             # Define Object to Add
@@ -682,3 +688,70 @@ class ApplicationWindow(Gtk.ApplicationWindow):
                 self.console_log(f"[Edit] Rotated {self.selected_object_name} by {rotate_degrees} around [{rotate_point_x}, {rotate_point_y}]")
             if scale_x != 0 or scale_y != 0:
                 self.console_log(f"[Edit] Scaled {self.selected_object_name} by {scale_x}% in X and {scale_y}% in Y")
+
+    # Handle Scene Open
+    @Gtk.Template.Callback("on-menu-scene-open")
+    def on_menu_scene_open(self, _item):
+        # Set Current Directory
+        self.dialog_scene_loader.set_current_folder(getcwd())
+        # Open File Chooser
+        self.dialog_scene_loader.show_all()
+    
+    @Gtk.Template.Callback("on-window-scene-loader-delete-event")
+    def on_window_scene_loader_delete_event(self, _dialog, _event):
+        # Response Dialog
+        self.dialog_scene_loader.hide()
+        # Do Not Destroy
+        return True
+
+    @Gtk.Template.Callback("on-window-scene-loader-file-activate")
+    def on_window_scene_loader_file_activate(self, _file_chooser):
+        # Response Dialog
+        self.dialog_scene_loader.response(Gtk.ResponseType.OK)
+
+    @Gtk.Template.Callback("on-window-scene-loader-btn-open")
+    def on_window_scene_loader_btn_open(self, _file_chooser):
+        # Response Dialog
+        self.dialog_scene_loader.response(Gtk.ResponseType.OK)
+    
+    @Gtk.Template.Callback("on-window-scene-loader-btn-cancel")
+    def on_window_scene_loader_btn_cancel(self, _file_chooser):
+        # Response Dialog
+        self.dialog_scene_loader.response(Gtk.ResponseType.CANCEL)
+
+    @Gtk.Template.Callback("on-window-scene-loader-file-selected")
+    def on_window_scene_loader_file_selected(self, file_chooser):
+        # Get Selected File
+        self.scene_file_name: str = file_chooser.get_filename()
+        # Print Filename
+
+    @Gtk.Template.Callback("on-window-scene-loader-response")
+    def on_window_scene_loader_response(self, dialog, response):
+        if response == Gtk.ResponseType.OK:
+            # Check Viewport and Window
+            if self.viewport is None or self.viewport.window is None:
+                return
+            # Load File
+            scene_descriptor = DescriptorOBJ.parseFile(self.scene_file_name, self.viewport.window.get_width(), self.viewport.window.get_height())
+            # Clear Display File
+            self.display_file.clear()
+            # Get Window Info
+            (wc_x, wc_y) = scene_descriptor.window_center.as_tuple()
+            window_width = scene_descriptor.window_width
+            window_height = scene_descriptor.window_height
+            # Update Window Data
+            self.viewport.window.x_min = wc_x - (window_width / 2)
+            self.viewport.window.x_max = wc_x + (window_width / 2)
+            self.viewport.window.y_min = wc_y - (window_height / 2)
+            self.viewport.window.y_may = wc_y + (window_height / 2)
+            self.viewport.window.vec_up_x = wc_x
+            self.viewport.window.vec_up_y = wc_y + (window_height / 2)
+            # Add Files to Display File
+            for (object_name, object_graphics) in scene_descriptor.objects.items():
+                self.display_file.add_object(object_name, object_graphics)
+            # Sync Object Tree
+            self.sync_object_tree()
+        # Reset Seleceted Filename
+        self.scene_file_name = None
+        # Close Dialog
+        dialog.hide()

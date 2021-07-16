@@ -51,6 +51,10 @@ class DisplayFile:
         # Delete By Name
         self.objects.pop(object_name)
     
+    def clear(self) -> None:
+        # Delete All
+        self.objects.clear()
+
     def transform_object(
         self, object_name: str,
         translate_x: float, translate_y: float,

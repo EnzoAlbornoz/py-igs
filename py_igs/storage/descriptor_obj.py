@@ -1,0 +1,201 @@
+# Import Dependencies
+from __future__ import annotations
+from pathlib import Path
+from typing import Dict, List, Tuple
+from objects.point_2d import Point2D
+from objects.line_2d import Line2D
+from objects.wireframe_2d import Wireframe2D
+from primitives.graphical_object import GraphicalObject
+from primitives.matrix import Vector2
+# Declare Class
+class DescriptorOBJ:
+    # Define Constructor
+    def __init__(self, objects: Dict[str, GraphicalObject], window_config: Tuple[Vector2, int, int]) -> None:
+        # Destructure Params
+        (window_center, window_width, window_height) = window_config
+        # Attributes
+        self.objects = objects
+        self.window_center = window_center
+        self.window_width = window_width
+        self.window_height = window_height
+    # Define Parser
+    @staticmethod
+    def parseFile(file_name: str, default_width: int, default_height: int) -> DescriptorOBJ:
+        # Define Working Dir Context
+        file_path = Path(file_name).resolve()
+        # working_dir = file_path.parent
+        # Check is File
+        if not file_path.is_file():
+            raise ValueError("Invalid file path")
+        # Define Vertices
+        vertices_positions: List[Tuple[float, float, float]] = []
+        # Define Objects
+        current_object: str | None = None
+        objects: Dict[str, GraphicalObject] = dict()
+        # Define Window Config
+        window_center: Vector2 = Vector2(0, 0)
+        window_width: int = default_width
+        window_height: int = default_height
+        # Define Materials
+        materials: Dict[str, Tuple[float, float, float]] = dict()
+        current_reading_material = "loaded_material"
+        current_using_material: str | None = None
+        # Read File
+        with file_path.open() as file:
+            # Iterate over Lines
+            for line in file:
+                # Switch For Line Type
+                if len(line.strip()) == 0:
+                    # Empty Line
+                    pass
+                elif line.startswith("#"):
+                    # Comment
+                    pass
+                elif line.startswith("v"):
+                    # Vertex
+                    _, *values = [el for el in line.split(" ") if len(el) > 0]
+                    # Parse XYZ
+                    vx, vy, vz = [float(values[idx]) if len(values) > idx else 0.0 for idx in range(3)]
+                    # Add vertex to vertices list
+                    vertices_positions.append((vx,vy,vz))
+                elif line.startswith("l"):
+                    # Line
+                    _, *values = [el for el in line.split(" ") if len(el) > 0]
+                    # Parse FROM and TO
+                    idx_vecs = [int(values[idx]) if len(values) > idx else 0 for idx in range(max(2, len(values)))]
+                    # Load Vertices into Vector 2D
+                    line_vecs = [vertices_positions[idx_vec - 1] for idx_vec in idx_vecs]
+                    line_vecs = [
+                        Vector2(
+                            (vx * (0.5 * window_width)) + window_center.get_x(),
+                            (vy * (0.5 * window_height)) + window_center.get_y()
+                        )
+                        for (vx, vy, *_) in line_vecs
+                    ]
+                    # Build Object
+                    line = Wireframe2D(*line_vecs) if len(line_vecs) > 2 else Line2D(*line_vecs)
+                    # Check Color
+                    if current_using_material is not None:
+                        # Update Object Material
+                        material_kd_rgb = materials[current_using_material]
+                        line.set_color((*material_kd_rgb, 1))
+                    # Add Line to Objects
+                    if current_object is None:
+                        objects[f"loaded_object_{len(objects)}"] = line
+                    else:
+                        objects[current_object] = line
+                elif line.startswith("f"):
+                    # Face (Triangle)
+                    # Get Values List
+                    _, *values = [el for el in line.split(" ") if len(el) > 0]
+                    # Parse Triangle Vertices
+                    vi_1, vi_2, vi_3 = [int(values[idx]) if len(values) > idx else 0 for idx in range(3)]
+                    # Load Vertices
+                    (v1_x, v1_y, *_) = vertices_positions[vi_1 - 1]
+                    (v2_x, v2_y, *_) = vertices_positions[vi_2 - 1]
+                    (v3_x, v3_y, *_) = vertices_positions[vi_3 - 1]
+                    (v4_x, v4_y, *_) = vertices_positions[vi_3 - 1]
+                    # Define Triangle
+                    triangle = Wireframe2D(
+                        Vector2(
+                            (v1_x * (0.5 * window_width)) + window_center.get_x(),
+                            (v1_y * (0.5 * window_height)) + window_center.get_y()
+                        ),
+                        Vector2(
+                            (v2_x * (0.5 * window_width)) + window_center.get_x(),
+                            (v2_y * (0.5 * window_height)) + window_center.get_y()
+                        ),
+                        Vector2(
+                            (v3_x * (0.5 * window_width)) + window_center.get_x(),
+                            (v3_y * (0.5 * window_height)) + window_center.get_y()
+                        ),
+                        Vector2(
+                            (v4_x * (0.5 * window_width)) + window_center.get_x(),
+                            (v4_y * (0.5 * window_height)) + window_center.get_y()
+                        )
+                    )
+                    # Check Color
+                    if current_using_material is not None:
+                        # Update Object Material
+                        material_kd_rgb = materials[current_using_material]
+                        triangle.set_color((*material_kd_rgb, 1))
+                    # Add Triangle to Objects
+                    if current_object is None:
+                        objects[f"loaded_object_{len(objects)}"] = triangle
+                    else:
+                        objects[current_object] = triangle
+                elif line.startswith("p"):
+                    # Point
+                    # Get Point Data
+                    _, point_idx = [el for el in line.split(" ") if len(el) > 0]
+                    # Parse Point Index
+                    point_idx = int(point_idx)
+                    (vx, vy, *_) = vertices_positions[point_idx - 1]
+                    # Create Object
+                    point = Point2D(
+                        Vector2(
+                            (vx * (0.5 * window_width)) + window_center.get_x(),
+                            (vy * (0.5 * window_height)) + window_center.get_y()
+                        )
+                    )
+                    # Check Color
+                    if current_using_material is not None:
+                        # Update Object Material
+                        material_kd_rgb = materials[current_using_material]
+                        point.set_color((*material_kd_rgb, 1))
+                    # Add Point to Objects
+                    if current_object is None:
+                        objects[f"loaded_object_{len(objects)}"] = point
+                    else:
+                        objects[current_object] = point
+                elif line.startswith("o"):
+                    # Object Name
+                    _, object_name = [el for el in line.split(" ") if len(el) > 0]
+                    # Update Object Name
+                    current_object = object_name
+                elif line.startswith("w"):
+                    # Definition of Window Sizing
+                    _, *values = [el for el in line.split(" ") if len(el) > 0]
+                    # Parse Data
+                    vi_center, vi_dims = [int(values[idx]) for idx in range(2)]
+                    # Load From Vectors
+                    (vc_x, vc_y, *_) = vertices_positions[vi_center - 1]
+                    (v_w, v_h, *_) = vertices_positions[vi_dims - 1]
+                    # Update Data
+                    window_center = Vector2(vc_x, vc_y)
+                    window_width = int(v_w)
+                    window_height = int(v_h)
+                elif line.startswith("mtllib"):
+                    # Import Material File
+                    _, material_file_path = [el for el in line.split(" ") if len(el) > 0]
+                    # Resolve File
+                    material_file_path = file_path.parent.joinpath(material_file_path)
+                    # Open and Read File
+                    with material_file_path.open() as mat_file:
+                        for mat_line in mat_file:
+                            if len(mat_line.strip()) == 0 or mat_line.startswith("#"):
+                                pass
+                            elif mat_line.startswith("newmtl"):
+                                # New Material
+                                _, material_name = [el for el in mat_line.split(" ") if len(el) > 0]
+                                # Update Current Material Name
+                                current_reading_material = material_name
+                            elif mat_line.startswith("Kd"):
+                                # Get Material Data
+                                _, *values = [el for el in mat_line.split(" ") if len(el) > 0]
+                                kd_r, kd_g, kd_b = [float(values[idx]) if len(values) > idx else 1 for idx in range(3)]
+                                # Save Material
+                                materials[current_reading_material] = (kd_r, kd_g, kd_b)
+                            else:
+                                # No Behaviour
+                                print(f"Unrecognized line: '{mat_file}'")
+                elif line.startswith("usemtl"):
+                    # Use Material
+                    _, material_name = [el for el in line.split(" ") if len(el) > 0]
+                    # Update Current Material
+                    current_using_material = material_name
+                else:
+                    # No Behaviour
+                    print(f"Unrecognize Field: {line.strip()}")
+        # Create Class
+        return DescriptorOBJ(objects, (window_center, window_width, window_height))
