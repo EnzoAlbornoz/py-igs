@@ -750,9 +750,11 @@ class ApplicationWindow(Gtk.ApplicationWindow):
             self.viewport.window.x_min = wc_x - (window_width / 2)
             self.viewport.window.x_max = wc_x + (window_width / 2)
             self.viewport.window.y_min = wc_y - (window_height / 2)
-            self.viewport.window.y_may = wc_y + (window_height / 2)
+            self.viewport.window.y_max = wc_y + (window_height / 2)
             self.viewport.window.vec_up_x = wc_x
             self.viewport.window.vec_up_y = wc_y + (window_height / 2)
+            # Log 
+            self.console_log(f"[Window] New Dimensions: {self.viewport.window.get_width()} x {self.viewport.window.get_height()}")
             # Add Files to Display File
             for (object_name, object_graphics) in scene_descriptor.objects.items():
                 self.display_file.add_object(object_name, object_graphics)

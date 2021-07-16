@@ -39,6 +39,7 @@ class DescriptorOBJ:
         window_center: Vector2 = Vector2(0, 0)
         window_width: int = default_width
         window_height: int = default_height
+        is_normalized = False
         # Define Materials
         materials: Dict[str, Tuple[float, float, float]] = dict()
         current_reading_material = "loaded_material"
@@ -65,13 +66,13 @@ class DescriptorOBJ:
                     # Line
                     _, *values = [el for el in line.split(" ") if len(el) > 0]
                     # Parse FROM and TO
-                    idx_vecs = [int(values[idx]) if len(values) > idx else 0 for idx in range(max(2, len(values)))]
+                    idx_vecs = [int(values[idx].split("/")[0]) if len(values) > idx else 0 for idx in range(max(2, len(values)))]
                     # Load Vertices into Vector 2D
                     line_vecs = [vertices_positions[idx_vec - 1] for idx_vec in idx_vecs]
                     line_vecs = [
                         Vector2(
-                            (vx * (0.5 * window_width)) + window_center.get_x(),
-                            (vy * (0.5 * window_height)) + window_center.get_y()
+                            (vx * (0.5 * window_width if is_normalized else 1)) + window_center.get_x(),
+                            (vy * (0.5 * window_height if is_normalized else 1)) + window_center.get_y()
                         )
                         for (vx, vy, *_) in line_vecs
                     ]
@@ -92,7 +93,7 @@ class DescriptorOBJ:
                     # Get Values List
                     _, *values = [el for el in line.split(" ") if len(el) > 0]
                     # Parse Triangle Vertices
-                    vi_1, vi_2, vi_3 = [int(values[idx]) if len(values) > idx else 0 for idx in range(3)]
+                    vi_1, vi_2, vi_3 = [int(values[idx].split("/")[0]) if len(values) > idx else 0 for idx in range(3)]
                     # Load Vertices
                     (v1_x, v1_y, *_) = vertices_positions[vi_1 - 1]
                     (v2_x, v2_y, *_) = vertices_positions[vi_2 - 1]
@@ -101,20 +102,20 @@ class DescriptorOBJ:
                     # Define Triangle
                     triangle = Wireframe2D(
                         Vector2(
-                            (v1_x * (0.5 * window_width)) + window_center.get_x(),
-                            (v1_y * (0.5 * window_height)) + window_center.get_y()
+                            (v1_x * (0.5 * window_width if is_normalized else 1)) + window_center.get_x(),
+                            (v1_y * (0.5 * window_height if is_normalized else 1)) + window_center.get_y()
                         ),
                         Vector2(
-                            (v2_x * (0.5 * window_width)) + window_center.get_x(),
-                            (v2_y * (0.5 * window_height)) + window_center.get_y()
+                            (v2_x * (0.5 * window_width if is_normalized else 1)) + window_center.get_x(),
+                            (v2_y * (0.5 * window_height if is_normalized else 1)) + window_center.get_y()
                         ),
                         Vector2(
-                            (v3_x * (0.5 * window_width)) + window_center.get_x(),
-                            (v3_y * (0.5 * window_height)) + window_center.get_y()
+                            (v3_x * (0.5 * window_width if is_normalized else 1)) + window_center.get_x(),
+                            (v3_y * (0.5 * window_height if is_normalized else 1)) + window_center.get_y()
                         ),
                         Vector2(
-                            (v4_x * (0.5 * window_width)) + window_center.get_x(),
-                            (v4_y * (0.5 * window_height)) + window_center.get_y()
+                            (v4_x * (0.5 * window_width if is_normalized else 1)) + window_center.get_x(),
+                            (v4_y * (0.5 * window_height if is_normalized else 1)) + window_center.get_y()
                         )
                     )
                     # Check Color
@@ -132,13 +133,13 @@ class DescriptorOBJ:
                     # Get Point Data
                     _, point_idx = [el for el in line.split(" ") if len(el) > 0]
                     # Parse Point Index
-                    point_idx = int(point_idx)
+                    point_idx = int(point_idx.split("/")[0])
                     (vx, vy, *_) = vertices_positions[point_idx - 1]
                     # Create Object
                     point = Point2D(
                         Vector2(
-                            (vx * (0.5 * window_width)) + window_center.get_x(),
-                            (vy * (0.5 * window_height)) + window_center.get_y()
+                            (vx * (0.5 * window_width if is_normalized else 1)) + window_center.get_x(),
+                            (vy * (0.5 * window_height if is_normalized else 1)) + window_center.get_y()
                         )
                     )
                     # Check Color
@@ -168,6 +169,7 @@ class DescriptorOBJ:
                     window_center = Vector2(vc_x, vc_y)
                     window_width = int(v_w)
                     window_height = int(v_h)
+                    is_normalized = True
                 elif line.startswith("mtllib"):
                     # Import Material File
                     _, material_file_path = [el for el in line.split(" ") if len(el) > 0]
@@ -209,8 +211,8 @@ class DescriptorOBJ:
         objects = display_file.get_objects()
         # Get Window Data
         window_center = window.get_center()
-        window_width = int(window.get_width())
-        window_height = int(window.get_height())
+        window_width = window.get_width()
+        window_height = window.get_height()
         normalization_matrix = window.as_normalized_coordinates_transform()
         # Define Lists
         vertices: List[Vector2] = []
