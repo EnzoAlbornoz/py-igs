@@ -2,11 +2,14 @@
 from __future__ import annotations
 from pathlib import Path
 from typing import Dict, List, Tuple
+from pathlib import Path
 from objects.point_2d import Point2D
 from objects.line_2d import Line2D
 from objects.wireframe_2d import Wireframe2D
+from primitives.display_file import DisplayFile
 from primitives.graphical_object import GraphicalObject
 from primitives.matrix import Vector2
+from primitives.window import Window
 # Declare Class
 class DescriptorOBJ:
     # Define Constructor
@@ -152,7 +155,7 @@ class DescriptorOBJ:
                     # Object Name
                     _, object_name = [el for el in line.split(" ") if len(el) > 0]
                     # Update Object Name
-                    current_object = object_name
+                    current_object = object_name.strip().strip("\n")
                 elif line.startswith("w"):
                     # Definition of Window Sizing
                     _, *values = [el for el in line.split(" ") if len(el) > 0]
@@ -169,7 +172,7 @@ class DescriptorOBJ:
                     # Import Material File
                     _, material_file_path = [el for el in line.split(" ") if len(el) > 0]
                     # Resolve File
-                    material_file_path = file_path.parent.joinpath(material_file_path)
+                    material_file_path = file_path.parent.joinpath(material_file_path.strip().strip("\n"))
                     # Open and Read File
                     with material_file_path.open() as mat_file:
                         for mat_line in mat_file:
@@ -199,3 +202,103 @@ class DescriptorOBJ:
                     print(f"Unrecognize Field: {line.strip()}")
         # Create Class
         return DescriptorOBJ(objects, (window_center, window_width, window_height))
+
+    @staticmethod
+    def serializeToFiles(file_name_obj: str, file_name_mtl: str, display_file: DisplayFile, window: Window) -> None:
+        # Get Objects Dict
+        objects = display_file.get_objects()
+        # Get Window Data
+        window_center = window.get_center()
+        window_width = int(window.get_width())
+        window_height = int(window.get_height())
+        normalization_matrix = window.as_normalized_coordinates_transform()
+        # Define Lists
+        vertices: List[Vector2] = []
+        object_lines: List[str] = []
+        materials: List[str] = []
+        # Define Window
+        vertices.append(window_center)
+        vertices.append(Vector2(window_width, window_height))
+        window_settings = "w 1 2"
+        # Define Material Import
+        object_file_path = Path(file_name_obj)
+        material_file_path = Path(file_name_mtl)
+        relative_material_file_path = material_file_path.relative_to(object_file_path.parent)
+        material_import = f"mtllib {relative_material_file_path}"
+        # Iterate over Objects
+        for (object_name, _, object_graphics) in objects:
+            # Normalized Object
+            object_graphics.pipeline()
+            object_graphics.transform(normalization_matrix)
+            if isinstance(object_graphics, Point2D):
+                points = [object_graphics.pipeline_point]
+                vertex_idxs: List[int] = []
+                for point in points:
+                    vertices.append(point)
+                    vertex_idx = len(vertices)
+                    vertex_idxs.append(vertex_idx)
+                # Declare Materials
+                (kd_r, kd_g, kd_b, *_) = object_graphics.color
+                material_lines: List[str] = []
+                material_lines.append(f"newmtl mtl_{object_name.strip()}")
+                material_lines.append(f"Kd {float(kd_r)} {float(kd_g)} {float(kd_b)}")
+                # Declare Object
+                content: List[str] = []
+                content.append(f"o {object_name}")
+                content.append(f"usemtl mtl_{object_name.strip()}")
+                content.append("p " + " ".join(map(str, vertex_idxs)))
+                # Save Into List
+                object_lines.append("\n".join(content))
+                materials.append("\n".join(material_lines))
+            elif isinstance(object_graphics, Line2D):
+                points = [object_graphics.pipeline_point_a, object_graphics.pipeline_point_b]
+                vertex_idxs: List[int] = []
+                for point in points:
+                    vertices.append(point)
+                    vertex_idx = len(vertices)
+                    vertex_idxs.append(vertex_idx)
+                # Declare Materials
+                (kd_r, kd_g, kd_b, *_) = object_graphics.color
+                material_lines: List[str] = []
+                material_lines.append(f"newmtl mtl_{object_name.strip()}")
+                material_lines.append(f"Kd {float(kd_r)} {float(kd_g)} {float(kd_b)}")
+                # Declare Object
+                content: List[str] = []
+                content.append(f"o {object_name}")
+                content.append(f"usemtl mtl_{object_name.strip()}")
+                content.append("l " + " ".join(map(str, vertex_idxs)))
+                # Save Into List
+                object_lines.append("\n".join(content))
+                materials.append("\n".join(material_lines))
+            elif isinstance(object_graphics, Wireframe2D):
+                points = object_graphics.pipeline_points
+                is_triangle = len(points) == 3
+                vertex_idxs: List[int] = []
+                for point in points:
+                    vertices.append(point)
+                    vertex_idx = len(vertices)
+                    vertex_idxs.append(vertex_idx)
+                # Declare Materials
+                (kd_r, kd_g, kd_b, *_) = object_graphics.color
+                material_lines: List[str] = []
+                material_lines.append(f"newmtl mtl_{object_name.strip()}")
+                material_lines.append(f"Kd {float(kd_r)} {float(kd_g)} {float(kd_b)}")
+                # Declare Object
+                content: List[str] = []
+                content.append(f"o {object_name}")
+                content.append(f"usemtl mtl_{object_name.strip()}")
+                content.append(("f" if is_triangle else "l") + " " + " ".join(map(str, vertex_idxs)))
+                # Save Into List
+                object_lines.append("\n".join(content))
+                materials.append("\n".join(material_lines))
+        # Serialize Vertices
+        vertices_serialized = "\n".join([f"v {vertex.get_x()} {vertex.get_y()} 0" for vertex in vertices])
+        object_lines_serialized = "\n".join(object_lines)
+        # Serialize
+        materials_serialized = "\n".join(materials)
+        object_file_content = "\n".join([material_import, vertices_serialized, window_settings, object_lines_serialized])
+        # Write File
+        with object_file_path.open("w") as f:
+            f.write(object_file_content)
+        with material_file_path.open("w") as f:
+            f.write(materials_serialized)

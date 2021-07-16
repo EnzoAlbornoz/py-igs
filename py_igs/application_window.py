@@ -34,6 +34,10 @@ class DialogObjectType(IntEnum):
     POINT = 0
     LINE = 1
     WIREFRAME = 2
+@unique
+class DialogSceneSaveType(IntEnum):
+    SELECT_OBJECT = 0
+    SELECT_MATERIAL = 1
 # Define Window
 @Gtk.Template(filename="resources/interface/application.glade")
 class ApplicationWindow(Gtk.ApplicationWindow):
@@ -66,6 +70,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     dialog_about: Any = Gtk.Template.Child("window-about")
 
     dialog_scene_loader: Any = Gtk.Template.Child("window-scene-loader")
+    dialgo_scene_save: Any = Gtk.Template.Child("window-scene-save")
     # Global Attributes
     g_nav_adjustment_zoom: Any = Gtk.Template.Child("g-widget-navigation-nav-adjustment-zoom")
     g_nav_adjustment_pan: Any = Gtk.Template.Child("g-widget-navigation-nav-adjustment-pan")
@@ -107,6 +112,8 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         self.add_object_current_color = Gdk.RGBA()
         # Define Variables to Handle Scene Load
         self.scene_file_name = None
+        self.material_file_name = None
+        self.scene_save_step = None
     # Define Sync Functions
     def sync_object_tree(self):
         # Clear Object Store
@@ -755,3 +762,79 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         self.scene_file_name = None
         # Close Dialog
         dialog.hide()
+
+    # Handle Scene Save
+    @Gtk.Template.Callback("on-menu-scene-save")
+    def on_menu_scene_save(self, _item):
+        # Set Current Directory
+        self.dialgo_scene_save.set_current_folder(getcwd())
+        self.dialgo_scene_save.set_current_name("scene.obj")
+        self.dialgo_scene_save.set_title("Save As (Object File)")
+        # Set Current Step
+        self.scene_file_name = None
+        self.scene_save_step = DialogSceneSaveType.SELECT_OBJECT
+        # Open File Chooser
+        self.dialgo_scene_save.show_all()
+    
+    @Gtk.Template.Callback("on-window-scene-save-delete-event")
+    def on_window_scene_save_delete_event(self, _dialog, _event):
+        # Response Dialog
+        self.dialgo_scene_save.hide()
+        # Do Not Destroy
+        return True
+
+    @Gtk.Template.Callback("on-window-scene-save-file-activate")
+    def on_window_scene_save_file_activate(self, _file_chooser):
+        # Response Dialog
+        self.dialgo_scene_save.response(Gtk.ResponseType.OK)
+
+    @Gtk.Template.Callback("on-window-scene-save-btn-open")
+    def on_window_scene_save_btn_open(self, _file_chooser):
+        # Response Dialog
+        self.dialgo_scene_save.response(Gtk.ResponseType.OK)
+    
+    @Gtk.Template.Callback("on-window-scene-save-btn-cancel")
+    def on_window_scene_save_btn_cancel(self, _file_chooser):
+        # Response Dialog
+        self.dialgo_scene_save.response(Gtk.ResponseType.CANCEL)
+
+    @Gtk.Template.Callback("on-window-scene-save-file-selected")
+    def on_window_scene_save_file_selected(self, file_chooser):
+        # Get Selected File
+        if self.scene_save_step == DialogSceneSaveType.SELECT_OBJECT:
+            self.scene_file_name: str = file_chooser.get_filename()
+        elif self.scene_save_step ==  DialogSceneSaveType.SELECT_MATERIAL:
+            self.material_file_name: str = file_chooser.get_filename()
+
+    @Gtk.Template.Callback("on-window-scene-save-response")
+    def on_window_scene_save_response(self, dialog, response):
+        if response == Gtk.ResponseType.OK:
+            if self.scene_save_step == DialogSceneSaveType.SELECT_OBJECT:
+                # Prepare for Next Step
+                self.scene_save_step = DialogSceneSaveType.SELECT_MATERIAL
+                self.dialgo_scene_save.set_current_folder(getcwd())
+                self.dialgo_scene_save.set_current_name("scene.mtl")
+                self.dialgo_scene_save.set_title("Save As (Material File)")
+                # Close Dialog
+                dialog.hide()
+                # Set Dialog Title
+                dialog.set_title("Save As (Material)")
+                # Show Dialog
+                dialog.show_all()
+                return
+            elif self.scene_save_step == DialogSceneSaveType.SELECT_MATERIAL:
+                # Close Dialog
+                dialog.hide()
+                # Check Viewport and Window
+                if self.viewport is None or self.viewport.window is None:
+                    return
+                # Serialize Scene and Save File
+                DescriptorOBJ.serializeToFiles(
+                    self.scene_file_name,
+                    self.material_file_name,
+                    self.display_file,
+                    self.viewport.window
+                )
+        else:
+            # Close Dialog
+            dialog.hide()
