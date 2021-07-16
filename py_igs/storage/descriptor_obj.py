@@ -57,14 +57,14 @@ class DescriptorOBJ:
                     pass
                 elif line.startswith("v"):
                     # Vertex
-                    _, *values = [el for el in line.split(" ") if len(el) > 0]
+                    _, *values = [el for el in line.strip("\n").split(" ") if len(el) > 0]
                     # Parse XYZ
                     vx, vy, vz = [float(values[idx]) if len(values) > idx else 0.0 for idx in range(3)]
                     # Add vertex to vertices list
                     vertices_positions.append((vx,vy,vz))
                 elif line.startswith("l"):
                     # Line
-                    _, *values = [el for el in line.split(" ") if len(el) > 0]
+                    _, *values = [el for el in line.strip("\n").split(" ") if len(el) > 0]
                     # Parse FROM and TO
                     idx_vecs = [int(values[idx].split("/")[0]) if len(values) > idx else 0 for idx in range(max(2, len(values)))]
                     # Load Vertices into Vector 2D
@@ -91,7 +91,7 @@ class DescriptorOBJ:
                 elif line.startswith("f"):
                     # Face (Triangle)
                     # Get Values List
-                    _, *values = [el for el in line.split(" ") if len(el) > 0]
+                    _, *values = [el for el in line.strip("\n").split(" ") if len(el) > 0]
                     # Parse Triangle Vertices
                     vi_1, vi_2, vi_3 = [int(values[idx].split("/")[0]) if len(values) > idx else 0 for idx in range(3)]
                     # Load Vertices
@@ -131,7 +131,7 @@ class DescriptorOBJ:
                 elif line.startswith("p"):
                     # Point
                     # Get Point Data
-                    _, point_idx = [el for el in line.split(" ") if len(el) > 0]
+                    _, point_idx = [el for el in line.strip("\n").split(" ") if len(el) > 0]
                     # Parse Point Index
                     point_idx = int(point_idx.split("/")[0])
                     (vx, vy, *_) = vertices_positions[point_idx - 1]
@@ -154,12 +154,12 @@ class DescriptorOBJ:
                         objects[current_object] = point
                 elif line.startswith("o"):
                     # Object Name
-                    _, object_name = [el for el in line.split(" ") if len(el) > 0]
+                    _, object_name = [el for el in line.strip("\n").split(" ") if len(el) > 0]
                     # Update Object Name
                     current_object = object_name.strip().strip("\n")
                 elif line.startswith("w"):
                     # Definition of Window Sizing
-                    _, *values = [el for el in line.split(" ") if len(el) > 0]
+                    _, *values = [el for el in line.strip("\n").split(" ") if len(el) > 0]
                     # Parse Data
                     vi_center, vi_dims = [int(values[idx]) for idx in range(2)]
                     # Load From Vectors
@@ -172,7 +172,7 @@ class DescriptorOBJ:
                     is_normalized = True
                 elif line.startswith("mtllib"):
                     # Import Material File
-                    _, material_file_path = [el for el in line.split(" ") if len(el) > 0]
+                    _, material_file_path = [el for el in line.strip("\n").split(" ") if len(el) > 0]
                     # Resolve File
                     material_file_path = file_path.parent.joinpath(material_file_path.strip().strip("\n"))
                     # Open and Read File
@@ -182,12 +182,12 @@ class DescriptorOBJ:
                                 pass
                             elif mat_line.startswith("newmtl"):
                                 # New Material
-                                _, material_name = [el for el in mat_line.split(" ") if len(el) > 0]
+                                _, material_name = [el for el in mat_line.strip("\n").split(" ") if len(el) > 0]
                                 # Update Current Material Name
                                 current_reading_material = material_name
                             elif mat_line.startswith("Kd"):
                                 # Get Material Data
-                                _, *values = [el for el in mat_line.split(" ") if len(el) > 0]
+                                _, *values = [el for el in mat_line.strip("\n").split(" ") if len(el) > 0]
                                 kd_r, kd_g, kd_b = [float(values[idx]) if len(values) > idx else 1 for idx in range(3)]
                                 # Save Material
                                 materials[current_reading_material] = (kd_r, kd_g, kd_b)
@@ -196,7 +196,7 @@ class DescriptorOBJ:
                                 print(f"Unrecognized line: '{mat_line}'")
                 elif line.startswith("usemtl"):
                     # Use Material
-                    _, material_name = [el for el in line.split(" ") if len(el) > 0]
+                    _, material_name = [el for el in line.strip("\n").split(" ") if len(el) > 0]
                     # Update Current Material
                     current_using_material = material_name
                 else:
