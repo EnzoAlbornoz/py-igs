@@ -5,6 +5,7 @@ from primitives.clipping_method import EClippingMethod
 from primitives.graphical_object import GraphicalObject
 if TYPE_CHECKING:
     from cairo import Context
+    from primitives.window import Window
     from primitives.matrix import Matrix, Vector2
 
 class Wireframe2D(GraphicalObject):
@@ -95,5 +96,5 @@ class Wireframe2D(GraphicalObject):
         avg_coords *= points_len_mult
         return avg_coords.try_into_vec2()
 
-    def clip(self, method: EClippingMethod) -> GraphicalObject | None:
+    def clip(self, window: Window, method: EClippingMethod) -> GraphicalObject | None:
         return self

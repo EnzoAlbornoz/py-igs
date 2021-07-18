@@ -89,7 +89,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         super().__init__(*args, **kwargs)
         # Add Attributes
         self.viewport = None
-        self.viewport_margin = 10
+        self.viewport_margin = 20
         self.display_file = DisplayFile()
         # Add Click Support for Canvas
         self.drag_coords = None

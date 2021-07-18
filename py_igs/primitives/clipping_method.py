@@ -4,4 +4,5 @@ from enum import unique, IntEnum
 @unique
 class EClippingMethod(IntEnum):
     NONE = 0
+    POINT_CLIP = 1
     

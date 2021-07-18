@@ -1,8 +1,8 @@
 from __future__ import annotations
 from typing import Dict, List, TYPE_CHECKING, Tuple
 
-from math import radians
 from objects.wireframe_2d import Wireframe2D
+from math import radians
 from primitives.matrix import Vector2, homo_coords2_matrix_identity, homo_coords2_matrix_rotate, homo_coords2_matrix_scale, homo_coords2_matrix_translate
 if TYPE_CHECKING:
     from primitives.graphical_object import GraphicalObject

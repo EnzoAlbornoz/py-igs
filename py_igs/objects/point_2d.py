@@ -5,6 +5,7 @@ from primitives.clipping_method import EClippingMethod
 from primitives.graphical_object import GraphicalObject
 if TYPE_CHECKING:
     from cairo import Context
+    from primitives.window import Window
     from primitives.matrix import Matrix, Vector2
 
 class Point2D(GraphicalObject):
@@ -32,6 +33,8 @@ class Point2D(GraphicalObject):
             self.point = self.pipeline_point
             # Call Super
             super().pipeline_apply()
+    def __get_current_point(self) -> Vector2:
+        return self.pipeline_point if self.in_pipeline else self.point
     # Define Methods
     def draw(self, cairo: Context):
         # Get Point
@@ -61,7 +64,22 @@ class Point2D(GraphicalObject):
         return self
 
     def get_center_coords(self) -> Vector2:
-        return self.point
+        return self.point        
 
-    def clip(self, method: EClippingMethod) -> GraphicalObject | None:
-        return self
+    def clip(self, window: Window, method: EClippingMethod) -> GraphicalObject | None:
+        # Switch Method
+        if method == EClippingMethod.POINT_CLIP:
+            # Get Current Point
+            point = self.__get_current_point()
+            # Check Point in Window Domain
+            if (
+                point.get_x() >= -1 and point.get_x() <= 1 and
+                point.get_y() >= -1 and point.get_y() <= 1 
+            ):
+                return self
+            else:
+                # If not in Domain -> Clip It
+                return None
+        else:
+            # Default - Trait as None Clipping
+            return self

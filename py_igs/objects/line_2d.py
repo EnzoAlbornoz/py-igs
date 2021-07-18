@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from primitives.clipping_method import EClippingMethod
 from primitives.graphical_object import GraphicalObject
 from objects.object_type import ObjectType
+from primitives.window import Window
 if TYPE_CHECKING:
     from cairo import Context
     from primitives.matrix import Matrix, Vector2
@@ -80,5 +81,5 @@ class Line2D(GraphicalObject):
         center_coord = (point_a.as_vec3(1) + point_b.as_vec3(1)) * 0.5
         return center_coord.try_into_vec2()
 
-    def clip(self, method: EClippingMethod) -> GraphicalObject | None:
+    def clip(self, window: Window, method: EClippingMethod) -> GraphicalObject | None:
         return self
