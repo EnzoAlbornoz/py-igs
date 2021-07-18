@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from objects.object_type import ObjectType
+from primitives.clipping_method import EClippingMethod
 from primitives.graphical_object import GraphicalObject
 if TYPE_CHECKING:
     from cairo import Context
@@ -61,3 +62,6 @@ class Point2D(GraphicalObject):
 
     def get_center_coords(self) -> Vector2:
         return self.point
+
+    def clip(self, method: EClippingMethod) -> GraphicalObject | None:
+        return self

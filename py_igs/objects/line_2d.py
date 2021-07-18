@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+from primitives.clipping_method import EClippingMethod
 from primitives.graphical_object import GraphicalObject
 from objects.object_type import ObjectType
 if TYPE_CHECKING:
@@ -78,3 +79,6 @@ class Line2D(GraphicalObject):
         # Return Center
         center_coord = (point_a.as_vec3(1) + point_b.as_vec3(1)) * 0.5
         return center_coord.try_into_vec2()
+
+    def clip(self, method: EClippingMethod) -> GraphicalObject | None:
+        return self

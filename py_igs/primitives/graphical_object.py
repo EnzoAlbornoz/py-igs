@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Tuple
 from abc import ABC, abstractmethod
 from objects.object_type import ObjectType
+from primitives.clipping_method import EClippingMethod
 from primitives.matrix import Matrix, Vector2
 if TYPE_CHECKING:
     from cairo import Context
@@ -45,3 +46,7 @@ class GraphicalObject(ABC):
     def pipeline_abort(self) -> None:
         # Turn off the Pipeline
         self.in_pipeline = False
+    # Clipping Methods
+    @abstractmethod
+    def clip(self, method: EClippingMethod) -> GraphicalObject | None:
+        raise NotImplementedError("GraphicalObject is an abstract class.")

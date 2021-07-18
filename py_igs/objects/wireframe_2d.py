@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from objects.object_type import ObjectType
+from primitives.clipping_method import EClippingMethod
 from primitives.graphical_object import GraphicalObject
 if TYPE_CHECKING:
     from cairo import Context
@@ -93,3 +94,6 @@ class Wireframe2D(GraphicalObject):
             avg_coords += point
         avg_coords *= points_len_mult
         return avg_coords.try_into_vec2()
+
+    def clip(self, method: EClippingMethod) -> GraphicalObject | None:
+        return self

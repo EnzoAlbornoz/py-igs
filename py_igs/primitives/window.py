@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING
 from math import acos
 
 import cairo
+from objects.object_type import ObjectType
+from primitives.clipping_method import EClippingMethod
 from primitives.matrix import Matrix, Vector2, homo_coords2_matrix_rotate, homo_coords2_matrix_scale, homo_coords2_matrix_translate
 if TYPE_CHECKING:
     from primitives.display_file import DisplayFile
@@ -16,6 +18,12 @@ class Window:
         self.y_max = y_world_max
         self.vec_up_x = x_world_min + ((x_world_max - x_world_min) / 2)
         self.vec_up_y = y_world_max
+        # Define Clip Methods
+        self.cliping_methods = {
+            ObjectType.POINT_2D: EClippingMethod.NONE,
+            ObjectType.LINE_2D: EClippingMethod.NONE,
+            ObjectType.WIREFRAME_2D: EClippingMethod.NONE
+        }
     # Define Getters and Setters
     def get_width(self) -> float:
         current_theta = self.get_vec_up_theta()
@@ -188,11 +196,17 @@ class Window:
             drawable_object.transform(normalize)
             # Future Feature - Clipping
             # print("Line: ", drawable_object)
-            # Viewport - Generic Window -> Device Window
-            drawable_object.transform(viewport_transform)
-            # Draw in Device Window
-            drawable_object.draw(cairo)
-            # End Pipeline
-            drawable_object.pipeline_abort()
+            clipping_method = self.cliping_methods[drawable_object.get_type()]
+            clipped_object = drawable_object.clip(clipping_method)
+            # Check if need render
+            if clipped_object is not None:
+                # Viewport - Generic Window -> Device Window
+                clipped_object.transform(viewport_transform)
+                # Draw in Device Window
+                clipped_object.draw(cairo)
+                # End Pipeline
+                clipped_object.pipeline_abort()
+            else:
+                drawable_object.pipeline_abort()
             # Reset Color
             cairo.set_source_rgba(1, 1, 1, 1)
