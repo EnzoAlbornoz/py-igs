@@ -89,6 +89,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         super().__init__(*args, **kwargs)
         # Add Attributes
         self.viewport = None
+        self.viewport_margin = 10
         self.display_file = DisplayFile()
         # Add Click Support for Canvas
         self.drag_coords = None
@@ -133,8 +134,11 @@ class ApplicationWindow(Gtk.ApplicationWindow):
             return
         # Clear Screen
         ctx.set_source_rgb(0.5, 0.5, 0.5)
-        ctx.rectangle(0, 0 , self.viewport.get_width(), self.viewport.get_height())
+        ctx.rectangle(0, 0 , self.viewport.get_width() + (2 * self.viewport_margin), self.viewport.get_height() + (2 * self.viewport_margin))
         ctx.fill()
+        ctx.set_source_rgb(1, 1, 1)
+        ctx.rectangle(self.viewport_margin, self.viewport_margin , self.viewport.get_width(), self.viewport.get_height())
+        ctx.stroke()
         # Print New Screen
         ctx.set_source_rgb(1, 1, 1)
         ctx.set_line_width(1)
@@ -154,16 +158,16 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     @Gtk.Template.Callback("on-canvas-configure")
     def on_canvas_configure(self, _widget, event: Any):
         # Resize Viewport
+        width = event.width - self.viewport_margin
+        height = event.height - self.viewport_margin
         if self.viewport is None:
-            width = event.width
             half_width = (width / 2)
-            height = event.height
             half_height = (height / 2)
-            self.viewport = Viewport(0, 0, width, height)
+            self.viewport = Viewport(self.viewport_margin, self.viewport_margin, width , height )
             self.viewport.set_window(Window(-half_width, -half_height, half_width, half_height))
         else:
-            self.viewport.set_width(event.width, True)
-            self.viewport.set_height(event.height, True)
+            self.viewport.set_width(width, True)
+            self.viewport.set_height(height, True)
         # Log Operation
         self.console_log(f"[Viewport] Resized to {self.viewport.get_width()}x{self.viewport.get_height()}")
     
