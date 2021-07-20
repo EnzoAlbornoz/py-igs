@@ -24,6 +24,7 @@ class DescriptorOBJ:
     # Define Parser
     @staticmethod
     def parseFile(file_name: str, default_width: int, default_height: int) -> DescriptorOBJ:
+        DISPLAY_UNDEFINED_FIELDS = False
         # Define Working Dir Context
         file_path = Path(file_name).resolve()
         # working_dir = file_path.parent
@@ -66,7 +67,7 @@ class DescriptorOBJ:
                     # Line
                     _, *values = [el for el in line.strip("\n").split(" ") if len(el) > 0]
                     # Parse FROM and TO
-                    idx_vecs = [int(values[idx].split("/")[0]) if len(values) > idx else 0 for idx in range(max(2, len(values)))]
+                    idx_vecs = [int(value.split("/")[0]) for value in values]
                     # Load Vertices into Vector 2D
                     line_vecs = [vertices_positions[idx_vec - 1] for idx_vec in idx_vecs]
                     line_vecs = [
@@ -93,7 +94,7 @@ class DescriptorOBJ:
                     # Get Values List
                     _, *values = [el for el in line.strip("\n").split(" ") if len(el) > 0]
                     # Parse Triangle Vertices
-                    vectors = [int(values[idx].split("/")[0]) if len(values) > idx else 0 for idx in range(3)]
+                    vectors = [int(value.split("/")[0]) for value in values]
                     # Load Vertices
                     vectors = [vertices_positions[v_idx - 1] for v_idx in vectors]
                     vectors = [
@@ -181,7 +182,8 @@ class DescriptorOBJ:
                                 materials[current_reading_material] = (kd_r, kd_g, kd_b)
                             else:
                                 # No Behaviour
-                                print(f"Unrecognized line: '{mat_line}'")
+                                if DISPLAY_UNDEFINED_FIELDS:
+                                    print(f"Unrecognized line: '{mat_line}'")
                 elif line.startswith("usemtl"):
                     # Use Material
                     _, material_name = [el for el in line.strip("\n").split(" ") if len(el) > 0]
@@ -189,7 +191,8 @@ class DescriptorOBJ:
                     current_using_material = material_name
                 else:
                     # No Behaviour
-                    print(f"Unrecognize Field: {line.strip()}")
+                    if DISPLAY_UNDEFINED_FIELDS:
+                        print(f"Unrecognize Field: {line.strip()}")
         # Create Class
         return DescriptorOBJ(objects, (window_center, window_width, window_height))
 
