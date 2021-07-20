@@ -5,7 +5,6 @@ if TYPE_CHECKING:
     from primitives.clipping_method import EClippingMethod
     from objects.object_type import ObjectType
     from primitives.matrix import Matrix, Vector2
-    from primitives.window import Window
     from cairo import Context
 
 class GraphicalObject(ABC):
@@ -49,5 +48,5 @@ class GraphicalObject(ABC):
         self.in_pipeline = False
     # Clipping Methods
     @abstractmethod
-    def clip(self, window: Window, method: EClippingMethod) -> GraphicalObject | None:
+    def clip(self, method: EClippingMethod) -> GraphicalObject | None:
         raise NotImplementedError("GraphicalObject is an abstract class.")

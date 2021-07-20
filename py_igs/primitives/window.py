@@ -21,8 +21,8 @@ class Window:
         # Define Clip Methods
         self.cliping_methods = {
             ObjectType.POINT_2D: EClippingMethod.POINT_CLIP,
-            ObjectType.LINE_2D: EClippingMethod.NONE,
-            ObjectType.WIREFRAME_2D: EClippingMethod.NONE
+            ObjectType.LINE_2D: EClippingMethod.LINE_COHEN_SUTHERLAND,
+            ObjectType.WIREFRAME_2D: EClippingMethod.POLY_WEILER_ATHERTON
         }
     # Define Getters and Setters
     def get_width(self) -> float:
@@ -197,7 +197,7 @@ class Window:
             # Future Feature - Clipping
             # print("Line: ", drawable_object)
             clipping_method = self.cliping_methods[drawable_object.get_type()]
-            clipped_object = drawable_object.clip(self, clipping_method)
+            clipped_object = drawable_object.clip(clipping_method)
             # Check if need render
             if clipped_object is not None:
                 # Viewport - Generic Window -> Device Window

@@ -1,9 +1,8 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
-from primitives.clipping_method import EClippingMethod
+from typing import List, TYPE_CHECKING
+from primitives.clipping_method import EClippingMethod, cohen_sutherland_clip_line
 from primitives.graphical_object import GraphicalObject
 from objects.object_type import ObjectType
-from primitives.window import Window
 if TYPE_CHECKING:
     from cairo import Context
     from primitives.matrix import Matrix, Vector2
@@ -42,6 +41,8 @@ class Line2D(GraphicalObject):
             self.point_b = self.pipeline_point_b
             # Call Super
             super().pipeline_apply()
+    def __get_current_points(self) -> List[Vector2]:
+        return [self.pipeline_point_a, self.pipeline_point_b] if self.in_pipeline else [self.point_a, self.point_b]
     # Define Methods
     def draw(self, cairo: Context):
         # Get Points
@@ -81,5 +82,25 @@ class Line2D(GraphicalObject):
         center_coord = (point_a.as_vec3(1) + point_b.as_vec3(1)) * 0.5
         return center_coord.try_into_vec2()
 
-    def clip(self, window: Window, method: EClippingMethod) -> GraphicalObject | None:
-        return self
+    def clip(self, method: EClippingMethod) -> GraphicalObject | None:
+        # Switch Method
+        if method == EClippingMethod.LINE_COHEN_SUTHERLAND:
+            # Get Points
+            points = self.__get_current_points()
+            clipped_points = cohen_sutherland_clip_line(*points)
+            # If none, simply return none too 
+            if clipped_points is None:
+                return None
+            # Both Inside - Update Value
+            (clipped_left, clipped_right) = clipped_points
+            if self.in_pipeline:
+                self.pipeline_point_a = clipped_left
+                self.pipeline_point_b = clipped_right
+            else:
+                self.point_a = clipped_left
+                self.point_b = clipped_right
+            # Process First Point
+            return self
+        else:
+            # Default - Trait as None Clipping
+            return self

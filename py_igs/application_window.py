@@ -136,14 +136,16 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         ctx.set_source_rgb(0.5, 0.5, 0.5)
         ctx.rectangle(0, 0 , self.viewport.get_width() + (2 * self.viewport_margin), self.viewport.get_height() + (2 * self.viewport_margin))
         ctx.fill()
-        ctx.set_source_rgb(1, 1, 1)
-        ctx.rectangle(self.viewport_margin, self.viewport_margin , self.viewport.get_width(), self.viewport.get_height())
-        ctx.stroke()
         # Print New Screen
         ctx.set_source_rgb(1, 1, 1)
         ctx.set_line_width(1)
         # Draw Viewport
         self.viewport.draw(ctx, self.display_file)
+        # Draw Outer Viewport
+        ctx.set_source_rgb(1, 1, 1)
+        ctx.set_line_width(1)
+        ctx.rectangle(self.viewport_margin, self.viewport_margin , self.viewport.get_width(), self.viewport.get_height())
+        ctx.stroke()
     # Define Utility Functions
     def console_log(self, message: str):
         # Load Console Buffer
@@ -166,8 +168,8 @@ class ApplicationWindow(Gtk.ApplicationWindow):
             self.viewport = Viewport(self.viewport_margin, self.viewport_margin, width , height )
             self.viewport.set_window(Window(-half_width, -half_height, half_width, half_height))
         else:
-            self.viewport.set_width(width, True)
-            self.viewport.set_height(height, True)
+            self.viewport.set_width(width - self.viewport_margin, True)
+            self.viewport.set_height(height - self.viewport_margin, True)
         # Log Operation
         self.console_log(f"[Viewport] Resized to {self.viewport.get_width()}x{self.viewport.get_height()}")
     

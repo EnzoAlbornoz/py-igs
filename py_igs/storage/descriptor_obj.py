@@ -93,31 +93,18 @@ class DescriptorOBJ:
                     # Get Values List
                     _, *values = [el for el in line.strip("\n").split(" ") if len(el) > 0]
                     # Parse Triangle Vertices
-                    vi_1, vi_2, vi_3 = [int(values[idx].split("/")[0]) if len(values) > idx else 0 for idx in range(3)]
+                    vectors = [int(values[idx].split("/")[0]) if len(values) > idx else 0 for idx in range(3)]
                     # Load Vertices
-                    (v1_x, v1_y, *_) = vertices_positions[vi_1 - 1]
-                    (v2_x, v2_y, *_) = vertices_positions[vi_2 - 1]
-                    (v3_x, v3_y, *_) = vertices_positions[vi_3 - 1]
-                    (v4_x, v4_y, *_) = vertices_positions[vi_3 - 1]
-                    # Define Triangle
-                    triangle = Wireframe2D(
+                    vectors = [vertices_positions[v_idx - 1] for v_idx in vectors]
+                    vectors = [
                         Vector2(
-                            (v1_x * (0.5 * window_width if is_normalized else 1)) + window_center.get_x(),
-                            (v1_y * (0.5 * window_height if is_normalized else 1)) + window_center.get_y()
-                        ),
-                        Vector2(
-                            (v2_x * (0.5 * window_width if is_normalized else 1)) + window_center.get_x(),
-                            (v2_y * (0.5 * window_height if is_normalized else 1)) + window_center.get_y()
-                        ),
-                        Vector2(
-                            (v3_x * (0.5 * window_width if is_normalized else 1)) + window_center.get_x(),
-                            (v3_y * (0.5 * window_height if is_normalized else 1)) + window_center.get_y()
-                        ),
-                        Vector2(
-                            (v4_x * (0.5 * window_width if is_normalized else 1)) + window_center.get_x(),
-                            (v4_y * (0.5 * window_height if is_normalized else 1)) + window_center.get_y()
+                            (vx * (0.5 * window_width if is_normalized else 1)) + window_center.get_x(),
+                            (vy * (0.5 * window_height if is_normalized else 1)) + window_center.get_y()
                         )
-                    )
+                        for (vx, vy, *_) in vectors
+                    ]
+                    # Define Triangle
+                    triangle = Wireframe2D(*vectors)
                     # Check Color
                     if current_using_material is not None:
                         # Update Object Material
@@ -178,6 +165,7 @@ class DescriptorOBJ:
                     # Open and Read File
                     with material_file_path.open() as mat_file:
                         for mat_line in mat_file:
+                            mat_line = mat_line.strip().strip("\n")
                             if len(mat_line.strip()) == 0 or mat_line.startswith("#"):
                                 pass
                             elif mat_line.startswith("newmtl"):
