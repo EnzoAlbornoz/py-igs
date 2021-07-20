@@ -5,7 +5,6 @@ from primitives.clipping_method import EClippingMethod
 from primitives.graphical_object import GraphicalObject
 if TYPE_CHECKING:
     from cairo import Context
-    from primitives.window import Window
     from primitives.matrix import Matrix, Vector2
 
 class Point2D(GraphicalObject):
@@ -44,13 +43,20 @@ class Point2D(GraphicalObject):
         # Cast to Vector2
         (x1, y1) = homo2d_point.try_into_vec2().as_tuple()
         # Get Cairo Line Width
-        line_width_half = cairo.get_line_width() / 2
+        old_width = cairo.get_line_width()
+        new_width = 1
+        line_width_half = new_width / 2
+        cairo.set_line_width(new_width)
         # Set Color
         cairo.set_source_rgba(*self.color)
         # Draw a line that mimic point in canvas (cairo has autoclip on line with same origin/destiny)
-        cairo.move_to(x1 - line_width_half, y1)
-        cairo.line_to(x1 + line_width_half, y1)
+        cairo.move_to(x1 - line_width_half, y1 - line_width_half)
+        cairo.line_to(x1 + line_width_half, y1 - line_width_half)
+        cairo.line_to(x1 + line_width_half, y1 + line_width_half)
+        cairo.line_to(x1 - line_width_half, y1 + line_width_half)
+        cairo.close_path()
         cairo.stroke()
+        cairo.set_line_width(old_width)
     
     def transform(self, transformation: Matrix):
         # Transform Point
@@ -66,7 +72,7 @@ class Point2D(GraphicalObject):
     def get_center_coords(self) -> Vector2:
         return self.point        
 
-    def clip(self, window: Window, method: EClippingMethod) -> GraphicalObject | None:
+    def clip(self, method: EClippingMethod) -> GraphicalObject | None:
         # Switch Method
         if method == EClippingMethod.POINT_CLIP:
             # Get Current Point
