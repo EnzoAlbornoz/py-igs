@@ -21,8 +21,8 @@ class Window:
         # Define Clip Methods
         self.cliping_methods = {
             ObjectType.POINT_2D: EClippingMethod.POINT_CLIP,
-            ObjectType.LINE_2D: EClippingMethod.LINE_COHEN_SUTHERLAND,
-            ObjectType.WIREFRAME_2D: EClippingMethod.POLY_WEILER_ATHERTON
+            ObjectType.LINE_2D: EClippingMethod.LINE_LIANG_BARSKY,
+            ObjectType.WIREFRAME_2D: EClippingMethod.POLY_WEILER_ATHERTON_WITH_LB
         }
     # Define Getters and Setters
     def get_width(self) -> float:

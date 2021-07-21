@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import List, TYPE_CHECKING
-from primitives.clipping_method import EClippingMethod, cohen_sutherland_clip_line
+from primitives.clipping_method import EClippingMethod, cohen_sutherland_clip_line, liang_barsky_clip_line
 from primitives.graphical_object import GraphicalObject
 from objects.object_type import ObjectType
 if TYPE_CHECKING:
@@ -88,6 +88,24 @@ class Line2D(GraphicalObject):
             # Get Points
             points = self.__get_current_points()
             clipped_points = cohen_sutherland_clip_line(*points)
+            # If none, simply return none too 
+            if clipped_points is None:
+                return None
+            # Both Inside - Update Value
+            (clipped_left, clipped_right) = clipped_points
+            if self.in_pipeline:
+                self.pipeline_point_a = clipped_left
+                self.pipeline_point_b = clipped_right
+            else:
+                self.point_a = clipped_left
+                self.point_b = clipped_right
+            # Process First Point
+            return self
+        elif method == EClippingMethod.LINE_LIANG_BARSKY:
+            # Get Points
+            points = self.__get_current_points()
+            clipped_points = liang_barsky_clip_line(*points)
+            # print(clipped_points)
             # If none, simply return none too 
             if clipped_points is None:
                 return None
