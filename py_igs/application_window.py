@@ -17,6 +17,7 @@ from gi.repository import Gtk, Gdk
 from cairo import Context
 from helpers import extract_points_as_vec2_from_box, gdk_rgba_as_tuple, parse_text_into_points_2d
 from objects.line_2d import Line2D
+from objects.object_type import ObjectType
 from objects.point_2d import Point2D
 from objects.wireframe_2d import Wireframe2D
 from primitives.display_file import DisplayFile
@@ -25,6 +26,7 @@ from primitives.matrix import Vector2
 from primitives.viewport import Viewport
 from primitives.window import Window
 from storage.descriptor_obj import DescriptorOBJ
+from primitives.clipping_method import EClippingMethod
 # Setup Graphic
 gi.require_version("Gtk", "3.0")
 gi.require_foreign("cairo")
@@ -54,6 +56,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     dialog_object_add: Any = Gtk.Template.Child("window-object-add")
     dialog_object_add_object_name: Any = Gtk.Template.Child("window-object-add-name-entry")
     dialog_object_add_object_color: Any = Gtk.Template.Child("window-object-add-color-value")
+    dialog_object_add_object_filled: Any = Gtk.Template.Child("window-object-add-filled")
     dialog_object_add_tab_point_coords: Any = Gtk.Template.Child("window-object-add-point-coords")
     dialog_object_add_tab_line_coords: Any = Gtk.Template.Child("window-object-add-line-coords")
     dialog_object_add_tab_wireframe_coords: Any = Gtk.Template.Child("window-object-add-wireframe-coords")
@@ -74,6 +77,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     # Global Attributes
     g_nav_adjustment_zoom: Any = Gtk.Template.Child("g-widget-navigation-nav-adjustment-zoom")
     g_nav_adjustment_pan: Any = Gtk.Template.Child("g-widget-navigation-nav-adjustment-pan")
+    g_nav_adjustment_rotate: Any = Gtk.Template.Child("g-widget-navigation-nav-adjustment-rotation")
     g_tree_objects_store: Any = Gtk.Template.Child("g-widget-objects-tree-store")
 
     g_adj_dialog_edit_translate_x: Any = Gtk.Template.Child("g-window-object-edit-translate-adjustment-x")
@@ -109,6 +113,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         self.add_object_current_type_page = None
         self.add_object_current_type = None
         self.add_object_wireframe_extra_points = []
+        self.add_object_filled = False
         # Init White Color
         self.add_object_current_color = Gdk.RGBA()
         # Define Variables to Handle Scene Load
@@ -137,12 +142,12 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         ctx.rectangle(0, 0 , self.viewport.get_width() + (2 * self.viewport_margin), self.viewport.get_height() + (2 * self.viewport_margin))
         ctx.fill()
         # Print New Screen
-        ctx.set_source_rgb(1, 1, 1)
+        ctx.set_source_rgba(1, 1, 1, 1)
         ctx.set_line_width(1)
         # Draw Viewport
         self.viewport.draw(ctx, self.display_file)
         # Draw Outer Viewport
-        ctx.set_source_rgb(1, 1, 1)
+        ctx.set_source_rgba(1, 1, 1, 1)
         ctx.set_line_width(1)
         ctx.rectangle(self.viewport_margin, self.viewport_margin , self.viewport.get_width(), self.viewport.get_height())
         ctx.stroke()
@@ -281,8 +286,10 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         # Check Viewport and Window
         if self.viewport is None or self.viewport.window is None:
             return
+        # Get Rotation Ammount
+        rotation_value = self.g_nav_adjustment_rotate.get_value()
         # Rotate Right
-        self.viewport.window.rotate(radians(-45))
+        self.viewport.window.rotate(radians(-rotation_value))
         # Force Redraw
         self.widget_canvas.queue_draw()
     @Gtk.Template.Callback("on-btn-clicked-rotate-clockwise")
@@ -290,8 +297,10 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         # Check Viewport and Window
         if self.viewport is None or self.viewport.window is None:
             return
+        # Get Rotation Ammount
+        rotation_value = self.g_nav_adjustment_rotate.get_value()
         # Rotate Left
-        self.viewport.window.rotate(radians(45))
+        self.viewport.window.rotate(radians(rotation_value))
         # Force Redraw
         self.widget_canvas.queue_draw()
 
@@ -394,6 +403,34 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         self.widget_canvas.queue_draw()
         # Log
         self.console_log(f"[Display File] Removed {object_name} from display file")
+
+    # Handle Window Widget Change
+    @Gtk.Template.Callback("on-clip-method-change")
+    def on_clip_method_change(self, select_button):
+        # Get Value From Button
+        tree_iter: int = select_button.get_active_iter()
+        clip_method: str = select_button.get_model()[tree_iter][1]
+        clip_method = EClippingMethod(int(clip_method))
+        # Check Viewport and Window
+        if self.viewport is None or self.viewport.window is None:
+            return
+        # Update Clip Methods - Point
+        self.viewport.window.cliping_methods[ObjectType.POINT_2D] = (
+            clip_method if clip_method is EClippingMethod.NONE else EClippingMethod.POINT_CLIP
+        )
+        # Line
+        self.viewport.window.cliping_methods[ObjectType.LINE_2D] = clip_method
+        # Wireframes
+        self.viewport.window.cliping_methods[ObjectType.WIREFRAME_2D] = (
+            EClippingMethod.POLY_WEILER_ATHERTON_WITH_CS
+            if clip_method is EClippingMethod.LINE_COHEN_SUTHERLAND
+            else EClippingMethod.POLY_WEILER_ATHERTON_WITH_LB
+            if clip_method is EClippingMethod.LINE_LIANG_BARSKY
+            else EClippingMethod.NONE
+        )
+        # Force Redraw
+        self.widget_canvas.queue_draw()        
+    
     # Handle Objects Actions
     @Gtk.Template.Callback("on-dialog-add-objects-delete-event")
     def on_dialog_objects_delete_event(self, _dialog, _event):
@@ -439,6 +476,9 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         if self.add_object_current_type is None:
             self.add_object_current_type = DialogObjectType.POINT
         self.add_object_current_type_page = self.dialog_object_add_tab_point_coords
+        self.add_object_filled = False
+        self.dialog_object_add_object_filled.set_active(False)
+
         # Show Dialog
         self.dialog_object_add.show()
     
@@ -491,6 +531,8 @@ class ApplicationWindow(Gtk.ApplicationWindow):
                 points = extract_points_as_vec2_from_box(self.dialog_object_add_tab_wireframe_coords)
                 # Build Object
                 object_to_build = Wireframe2D(*points)
+                # Fill If Selected
+                object_to_build.set_filled(self.add_object_filled)
             elif self.add_object_current_type is None:
                 # Get Text
                 points_text = self.dialog_object_add_tab_text_coords.get_text()
@@ -507,6 +549,8 @@ class ApplicationWindow(Gtk.ApplicationWindow):
                 elif points_len >= 3:
                     # Its a Wireframe
                     object_to_build = Wireframe2D(*points)
+                    # Fill If Selected
+                    object_to_build.set_filled(self.add_object_filled)
                 else:
                     # Error
                     return
@@ -537,6 +581,13 @@ class ApplicationWindow(Gtk.ApplicationWindow):
             return
         # Allow Save Button
         self.dialog_object_add_btn_save.set_sensitive(True)
+
+    @Gtk.Template.Callback("on-window-object-add-filled")
+    def on_window_object_add_filled(self, check_button):
+        # Get Value
+        is_active: bool = check_button.get_active()
+        # Update Control
+        self.add_object_filled = is_active
 
     
     @Gtk.Template.Callback("on-dialog-object-add-btn-add-vertex")
