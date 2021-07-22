@@ -831,7 +831,7 @@ Gabriel Soares Flores
     <property name="type_hint">dialog</property>
     <property name="transient_for">window-root</property>
     <property name="program_name">Py IGS</property>
-    <property name="version">v0.1.0</property>
+    <property name="version">v0.4.0</property>
     <property name="copyright" translatable="yes">2021 - All rights reserved</property>
     <property name="comments" translatable="yes">Software developed for the Computer Graphics (INE5420-2021.1)  course. This course is part of our graduation in Computer Science at the Federal University of Santa Catarina (UFSC). </property>
     <property name="website">https://cco.ufsc.br/</property>
