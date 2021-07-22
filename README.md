@@ -1,7 +1,7 @@
 # PY-IGS - The PYthon Interactive Graphical System
 
 <div align="center">
-    <img src="./doc/images/full-screenshot.png" alt="PY-IGS" height="400" ></img>
+    <img src="./doc/images/full-screenshot2.png" alt="PY-IGS" height="400" ></img>
     <p>
         <em>The PY-IGS</em>
     </p>
@@ -43,6 +43,8 @@ If you want to use the navigation widget, you need to click on the buttons that 
 
 For zooming, you can use your mouse scroll or the `+` and `-` buttons on the navigation grid. You can configure the zoom ammount with the "Zoom Step" slider (from 0,01% up to 50% each step)
 
+You can also rotate the Window using the upper left and upper right buttons on navigation grid.
+
 <div align="center">
     <img src="./doc/images/navigation-widget.png" alt="Navigation Widget" height="200" ></img>
     <p>
@@ -55,6 +57,7 @@ For zooming, you can use your mouse scroll or the `+` and `-` buttons on the nav
 To add an object, you need to click on the "Add" button located in the objects widget. A dialog will popup in your screen.
 
 In this dialog, insert the object name (unique in the scene) then insert the points coordinates of your object. You can select the type of the object by changing the active tab of the dialog. The drawing color can also be defined in this dialog.
+There is an option to fill wireframes too, just check the `filled` option when adding the object.
 
 You can also input raw values at the "Text" tab. To use it, declare points using this format: `(x1, y1), (x2, y2), ...` (Obs: New lines are not allowed).
 
@@ -88,9 +91,43 @@ Select an object of the object list and then press the remove button in the obje
     </p>
 </div>
 
+### Window Clipping
+
+Currently we support 3 methods for Window clipping, they are:
+
+- None
+- Cohen-Sutherland
+- Liang-Barsky
+
+To choose it, select the desired method in the `Clipping Method` option in the Window widget.
+
+<div align="center">
+    <img src="./doc/images/window-widget.png" alt="Window Widget" width="300" ></img>
+    <p>
+        <em>The window widget</em>
+    </p>
+</div>
+
+### Import/Export Scenes (Wavefront Object)
+
+In the menu bar, you can select the `Scene`, then select `Open` to import objects. A file chooser will pop up and the you need to select the file to import.
+
+To export your scene, click on `Scene`, then select `Save As`. Then define were you want to save your `.obj` (Model) file and then select a location for the `.mtl` (Materials) file.
+
+#### Example Files
+
+In the `example/objects` folder you can find many models that were utilized to test Py-Igs functionalities.
+
 ---
 ## About
+Made by Enzo Coelho Albornoz and Gabriel Soares Flores.
 
 Software developed for the Computer Graphics (INE5420-2021.1)  course. This course is part of our graduation in Computer Science at the Federal University of Santa Catarina (UFSC). 
 
-Made by Enzo Coelho Albornoz and Gabriel Soares Flores.
+<div align="right">
+    <img src="./doc/images/brasao.ufsc.svg" alt="Window Widget" width="200" ></img>
+    <p>
+        <em>Made in UFSC</em>
+    </p>
+</div>
+
