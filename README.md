@@ -125,7 +125,7 @@ Made by Enzo Coelho Albornoz and Gabriel Soares Flores.
 Software developed for the Computer Graphics (INE5420-2021.1)  course. This course is part of our graduation in Computer Science at the Federal University of Santa Catarina (UFSC). 
 
 <div align="right">
-    <img src="./doc/images/brasao.ufsc.svg" alt="Window Widget" width="200" ></img>
+    <img src="./doc/images/brasao.ufsc.svg" alt="Window Widget" width="200" style="background-color: #132972;padding: 5px; border-radius: 8px"></img>
     <p>
         <em>Made in UFSC</em>
     </p>
