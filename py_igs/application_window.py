@@ -73,6 +73,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     dialog_about: Any = Gtk.Template.Child("window-about")
 
     dialog_scene_loader: Any = Gtk.Template.Child("window-scene-loader")
+    dialog_scene_loader_options_filled: Any = Gtk.Template.Child("window-scene-loader-filled")
     dialgo_scene_save: Any = Gtk.Template.Child("window-scene-save")
     # Global Attributes
     g_nav_adjustment_zoom: Any = Gtk.Template.Child("g-widget-navigation-nav-adjustment-zoom")
@@ -758,6 +759,8 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     def on_menu_scene_open(self, _item):
         # Set Current Directory
         self.dialog_scene_loader.set_current_folder(getcwd())
+        # Reset Options
+        self.dialog_scene_loader_options_filled.set_active(False)
         # Open File Chooser
         self.dialog_scene_loader.show_all()
     
@@ -795,8 +798,10 @@ class ApplicationWindow(Gtk.ApplicationWindow):
             # Check Viewport and Window
             if self.viewport is None or self.viewport.window is None:
                 return
+            # Fetch Options
+            import_options_filled: bool = self.dialog_scene_loader_options_filled.get_active()
             # Load File
-            scene_descriptor = DescriptorOBJ.parseFile(self.scene_file_name, self.viewport.window.get_width(), self.viewport.window.get_height())
+            scene_descriptor = DescriptorOBJ.parseFile(self.scene_file_name, self.viewport.window.get_width(), self.viewport.window.get_height(), import_options_filled)
             # Clear Display File
             self.display_file.clear()
             # Get Window Info

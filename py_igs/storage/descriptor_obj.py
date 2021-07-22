@@ -23,7 +23,7 @@ class DescriptorOBJ:
         self.window_height = window_height
     # Define Parser
     @staticmethod
-    def parseFile(file_name: str, default_width: int, default_height: int) -> DescriptorOBJ:
+    def parseFile(file_name: str, default_width: int, default_height: int, fill_faces: bool = False) -> DescriptorOBJ:
         DISPLAY_UNDEFINED_FIELDS = False
         # Define Working Dir Context
         file_path = Path(file_name).resolve()
@@ -79,6 +79,9 @@ class DescriptorOBJ:
                     ]
                     # Build Object
                     line = Wireframe2D(*line_vecs) if len(line_vecs) > 2 else Line2D(*line_vecs)
+                    # Check Filled
+                    if isinstance(line, Wireframe2D):
+                        line.set_filled(fill_faces)
                     # Check Color
                     if current_using_material is not None:
                         # Update Object Material
@@ -106,6 +109,8 @@ class DescriptorOBJ:
                     ]
                     # Define Triangle
                     triangle = Wireframe2D(*vectors)
+                    # Fill Faces
+                    triangle.set_filled(fill_faces)
                     # Check Color
                     if current_using_material is not None:
                         # Update Object Material
