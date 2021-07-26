@@ -137,7 +137,6 @@ def clip_point_region_code(point: Vector2, inital_point: Vector2, region_code: E
     return current_point
 
 def liang_barsky_clip_line(point_a: Vector2, point_b: Vector2) -> Tuple[Vector2, Vector2] | None:
-    
     # Check Heuristic
     # Compute Delta X and Delta Y
     delta_x = point_b.get_x() - point_a.get_x()

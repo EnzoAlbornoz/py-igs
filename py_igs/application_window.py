@@ -20,6 +20,7 @@ from objects.line_2d import Line2D
 from objects.object_type import ObjectType
 from objects.point_2d import Point2D
 from objects.wireframe_2d import Wireframe2D
+from objects.bezier_2d import Bezier2D
 from primitives.display_file import DisplayFile
 from primitives.graphical_object import GraphicalObject
 from primitives.matrix import Vector2
@@ -36,6 +37,8 @@ class DialogObjectType(IntEnum):
     POINT = 0
     LINE = 1
     WIREFRAME = 2
+    WIREFRAME_TEXT = 3
+    CURVE_TEXT = 4
 @unique
 class DialogSceneSaveType(IntEnum):
     SELECT_OBJECT = 0
@@ -62,6 +65,8 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     dialog_object_add_tab_wireframe_coords: Any = Gtk.Template.Child("window-object-add-wireframe-coords")
     dialog_object_add_tab_text_coords: Any = Gtk.Template.Child("window-object-add-text-value")
     dialog_object_add_btn_save: Any = Gtk.Template.Child("window-object-add-btn-save")
+    dialog_object_add_tab_text_curve_type: Any = Gtk.Template.Child("widget-objects-add-curve-option-type-value")
+    dialog_object_add_tab_text_curve_coords: Any = Gtk.Template.Child("widget-objects-add-curve-input-value")
 
     dialog_object_edit: Any = Gtk.Template.Child("window-object-edit")
     dialog_object_edit_rotate_around_center: Any = Gtk.Template.Child("window-object-edit-rotate-around-center")
@@ -421,6 +426,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         )
         # Line
         self.viewport.window.cliping_methods[ObjectType.LINE_2D] = clip_method
+        self.viewport.window.cliping_methods[ObjectType.BEZIER_2D] = clip_method
         # Wireframes
         self.viewport.window.cliping_methods[ObjectType.WIREFRAME_2D] = (
             EClippingMethod.POLY_WEILER_ATHERTON_WITH_CS
@@ -488,7 +494,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         # Save Selected Page
         self.add_object_current_type_page = page
         # Save Selected Type Too
-        self.add_object_current_type = DialogObjectType(page_num) if (page_num < 3) else None
+        self.add_object_current_type = DialogObjectType(page_num)
 
     @Gtk.Template.Callback("on-object-add-color-set")
     def on_object_add_color_set(self, button):
@@ -534,7 +540,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
                 object_to_build = Wireframe2D(*points)
                 # Fill If Selected
                 object_to_build.set_filled(self.add_object_filled)
-            elif self.add_object_current_type is None:
+            elif self.add_object_current_type is DialogObjectType.WIREFRAME_TEXT:
                 # Get Text
                 points_text = self.dialog_object_add_tab_text_coords.get_text()
                 # Get Points
@@ -555,6 +561,24 @@ class ApplicationWindow(Gtk.ApplicationWindow):
                 else:
                     # Error
                     return
+            elif self.add_object_current_type is DialogObjectType.CURVE_TEXT:
+                # Get Text
+                points_text = self.dialog_object_add_tab_text_curve_coords.get_text()
+                # Define Type
+                # Get Value From Button
+                tree_iter: int = self.dialog_object_add_tab_text_curve_type.get_active_iter()
+                curve_type_str: str = self.dialog_object_add_tab_text_curve_type.get_model()[tree_iter][1]
+                print(curve_type_str)
+                curve_type = ObjectType(int(curve_type_str))
+                # Get Points
+                points = parse_text_into_points_2d(points_text)
+                # Check Object to Build
+                if curve_type == ObjectType.BEZIER_2D:
+                    # Its a Point
+                    object_to_build = Bezier2D(0.01, *points)
+                # elif curve_type == ObjectType.BSPLINE_2D:
+                #     # Its a Line
+                #     object_to_build = BSpline2D(accuracy_step=0.01, *points)
             # Get Object Name
             object_name = self.dialog_object_add_object_name.get_text()
             # Get Object Color

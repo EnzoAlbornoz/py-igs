@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import Dict, List, TYPE_CHECKING, Tuple
 
 from math import radians
+from objects.bezier_2d import Bezier2D
 # from objects.line_2d import Line2D
 from objects.wireframe_2d import Wireframe2D
 from primitives.matrix import Vector2, homo_coords2_matrix_identity, homo_coords2_matrix_rotate, homo_coords2_matrix_scale, homo_coords2_matrix_translate
@@ -15,7 +16,8 @@ class DisplayFile:
         self.objects: Dict[str, Tuple[ObjectType, GraphicalObject]] = {}
         for (object_name, object_type, object_ref) in objects:
             self.objects[object_name] = (object_type, object_ref)
-        self.add_object("test", Wireframe2D(Vector2(0,0), Vector2(50, 100), Vector2(100, 0)))
+        self.add_object("test", Wireframe2D(Vector2(0,0), Vector2(50, 100), Vector2(100, 100), Vector2(150, 0)))
+        self.add_object("test2", Bezier2D(0.01, Vector2(0,0), Vector2(50, 100), Vector2(100, 100), Vector2(150, 0), Vector2(300, 300)))
         # self.add_object("testl", Line2D(Vector2(0,0), Vector2(100,100)))
     # Define Methods
     def get_names(self) -> List[str]:

@@ -1,12 +1,14 @@
 from __future__ import annotations
-from enum import Enum, unique, auto
+from enum import IntEnum, unique
 
 @unique
-class ObjectType(Enum):
+class ObjectType(IntEnum):
     # Define Enum Values
-    POINT_2D = auto()
-    LINE_2D = auto()
-    WIREFRAME_2D = auto()
+    POINT_2D = 1
+    LINE_2D = 2
+    WIREFRAME_2D = 3
+    BEZIER_2D = 4
+    BSPLINE_2D = 5
     # Handle Print
     def __str__(self) -> str:
         if self is ObjectType.POINT_2D:
@@ -15,5 +17,9 @@ class ObjectType(Enum):
             return "LINE_2D"
         elif self is ObjectType.WIREFRAME_2D:
             return "WIREFRAME_2D"
+        elif self is ObjectType.BEZIER_2D:
+            return "BEZIER_2D"
+        elif self is ObjectType.BSPLINE_2D:
+            return "BSPLINE_2D"
         else:
             raise ValueError("Invalid Type")
