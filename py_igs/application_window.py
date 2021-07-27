@@ -733,6 +733,12 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         if radio_button.get_active():
             # Get selected object center
             object_center = self.display_file.get_object_ref(self.selected_object_name).get_center_coords()
+            current_center_transform = reduce(
+                lambda acc_trans, it_trans: acc_trans * it_trans,
+                self.edit_object_transform_list,
+                homo_coords2_matrix_identity()
+            )
+            object_center = (object_center.as_vec3(1) * current_center_transform).try_into_vec2()
             # Define rotate point to the object center
             self.g_adj_dialog_edit_rotate_around_x.set_value(object_center.get_x())
             self.g_adj_dialog_edit_rotate_around_y.set_value(object_center.get_y())
@@ -813,7 +819,14 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         if scale_x == 0 and scale_y == 0:
             return
         # Define Transform
-        (point_x, point_y) = self.display_file.get_object_ref(self.selected_object_name).get_center_coords().as_tuple()
+        object_center = self.display_file.get_object_ref(self.selected_object_name).get_center_coords().as_vec3(1)
+        current_center_transform = reduce(
+            lambda acc_trans, it_trans: acc_trans * it_trans,
+            self.edit_object_transform_list,
+            homo_coords2_matrix_identity()
+        )
+        object_center *= current_center_transform
+        (point_x, point_y) = object_center.try_into_vec2().as_tuple()
         # Compute Scaling
         scale_x = 1 + (scale_x / 100)
         scale_y = 1 + (scale_y / 100)

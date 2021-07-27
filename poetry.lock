@@ -17,10 +17,18 @@ python-versions = ">=3.6, <4"
 [package.dependencies]
 pycairo = ">=1.16.0"
 
+[[package]]
+name = "yapf"
+version = "0.31.0"
+description = "A formatter for Python code."
+category = "dev"
+optional = false
+python-versions = "*"
+
 [metadata]
 lock-version = "1.1"
 python-versions = "~3.8"
-content-hash = "a2e27f4328dd3ecf410c8d33a8b5a31c1d55ce6eac5b21a46a58736b3011f83a"
+content-hash = "71be72f8925acee93116a237921c584b413e6f41c1856e2928431c644a61ae3e"
 
 [metadata.files]
 pycairo = [
@@ -38,4 +46,8 @@ pycairo = [
 ]
 pygobject = [
     {file = "PyGObject-3.40.1.tar.gz", hash = "sha256:6fb599aa59ceb9dd05fafb0d72b3862943e7d5e85c8ef6c74856bc6d4321cbab"},
+]
+yapf = [
+    {file = "yapf-0.31.0-py2.py3-none-any.whl", hash = "sha256:e3a234ba8455fe201eaa649cdac872d590089a18b661e39bbac7020978dd9c2e"},
+    {file = "yapf-0.31.0.tar.gz", hash = "sha256:408fb9a2b254c302f49db83c59f9aa0b4b0fd0ec25be3a5c51181327922ff63d"},
 ]
