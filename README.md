@@ -73,6 +73,8 @@ After that, click on the save button. The object will appear on the world at the
 ### Editing Objects (Transforms)
 Clicking in the edit button (in the objects widget) will open the editing dialog. In this window, you can define 3 transformations to apply on the object. They are: Translation, Rotation and Scaling. The translation will move the object over the world. The rotation will rotate the object around a given point that can be the world origin, the object center or a point that you specify. The scale will scale the objects in a "natural" way, i.e., based on the object center.
 
+All transformations are stored in a list that will be merged when applying these transformations to the object.
+
 <div align="center">
     <img src="./doc/images/object-edit.png" alt="Editing an object" height="200" ></img>
     <p>
