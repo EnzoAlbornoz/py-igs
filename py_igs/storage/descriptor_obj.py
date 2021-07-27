@@ -56,14 +56,14 @@ class DescriptorOBJ:
                 elif line.startswith("#"):
                     # Comment
                     pass
-                elif line.startswith("v"):
+                elif line.startswith("v "):
                     # Vertex
                     _, *values = [el for el in line.strip("\n").split(" ") if len(el) > 0]
                     # Parse XYZ
                     vx, vy, vz = [float(values[idx]) if len(values) > idx else 0.0 for idx in range(3)]
                     # Add vertex to vertices list
                     vertices_positions.append((vx,vy,vz))
-                elif line.startswith("l"):
+                elif line.startswith("l "):
                     # Line
                     _, *values = [el for el in line.strip("\n").split(" ") if len(el) > 0]
                     # Parse FROM and TO
@@ -92,7 +92,7 @@ class DescriptorOBJ:
                         objects[f"loaded_object_{len(objects)}"] = line
                     else:
                         objects[current_object] = line
-                elif line.startswith("f"):
+                elif line.startswith("f "):
                     # Face (Triangle)
                     # Get Values List
                     _, *values = [el for el in line.strip("\n").split(" ") if len(el) > 0]
@@ -121,7 +121,7 @@ class DescriptorOBJ:
                         objects[f"loaded_object_{len(objects)}"] = triangle
                     else:
                         objects[current_object] = triangle
-                elif line.startswith("p"):
+                elif line.startswith("p "):
                     # Point
                     # Get Point Data
                     _, point_idx = [el for el in line.strip("\n").split(" ") if len(el) > 0]
@@ -145,12 +145,12 @@ class DescriptorOBJ:
                         objects[f"loaded_object_{len(objects)}"] = point
                     else:
                         objects[current_object] = point
-                elif line.startswith("o"):
+                elif line.startswith("o "):
                     # Object Name
                     _, object_name = [el for el in line.strip("\n").split(" ") if len(el) > 0]
                     # Update Object Name
                     current_object = object_name.strip().strip("\n")
-                elif line.startswith("w"):
+                elif line.startswith("w "):
                     # Definition of Window Sizing
                     _, *values = [el for el in line.strip("\n").split(" ") if len(el) > 0]
                     # Parse Data
@@ -174,12 +174,12 @@ class DescriptorOBJ:
                             mat_line = mat_line.strip().strip("\n")
                             if len(mat_line.strip()) == 0 or mat_line.startswith("#"):
                                 pass
-                            elif mat_line.startswith("newmtl"):
+                            elif mat_line.startswith("newmtl "):
                                 # New Material
                                 _, material_name = [el for el in mat_line.strip("\n").split(" ") if len(el) > 0]
                                 # Update Current Material Name
                                 current_reading_material = material_name
-                            elif mat_line.startswith("Kd"):
+                            elif mat_line.startswith("Kd "):
                                 # Get Material Data
                                 _, *values = [el for el in mat_line.strip("\n").split(" ") if len(el) > 0]
                                 kd_r, kd_g, kd_b = [float(values[idx]) if len(values) > idx else 1 for idx in range(3)]
@@ -189,7 +189,7 @@ class DescriptorOBJ:
                                 # No Behaviour
                                 if DISPLAY_UNDEFINED_FIELDS:
                                     print(f"Unrecognized line: '{mat_line}'")
-                elif line.startswith("usemtl"):
+                elif line.startswith("usemtl "):
                     # Use Material
                     _, material_name = [el for el in line.strip("\n").split(" ") if len(el) > 0]
                     # Update Current Material
