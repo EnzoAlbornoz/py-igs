@@ -3,9 +3,9 @@ from typing import List, TYPE_CHECKING
 from objects.object_type import ObjectType
 from primitives.clipping_method import EClippingMethod, weiler_atherton_w_cs_clip_poly, weiler_atherton_w_lb_clip_poly
 from primitives.graphical_object import GraphicalObject
+from primitives.matrix import Matrix, Vector2
 if TYPE_CHECKING:
     from cairo import Context
-    from primitives.matrix import Matrix, Vector2
 
 class Wireframe2D(GraphicalObject):
     # Define Constructor

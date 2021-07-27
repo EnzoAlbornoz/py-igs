@@ -1,11 +1,9 @@
 from __future__ import annotations
 from typing import Dict, List, TYPE_CHECKING, Tuple
-
-from math import radians
 from objects.bezier_2d import Bezier2D
 # from objects.line_2d import Line2D
 from objects.wireframe_2d import Wireframe2D
-from primitives.matrix import Vector2, homo_coords2_matrix_identity, homo_coords2_matrix_rotate, homo_coords2_matrix_scale, homo_coords2_matrix_translate
+from primitives.matrix import Matrix, Vector2
 if TYPE_CHECKING:
     from primitives.graphical_object import GraphicalObject
     from objects.object_type import ObjectType
@@ -59,41 +57,11 @@ class DisplayFile:
         # Delete All
         self.objects.clear()
 
-    def transform_object(
-        self, object_name: str,
-        translate_x: float, translate_y: float,
-        rotation_dg: float, rotation_point_x: float, rotation_point_y: float,
-        scale_perc_x: float, scale_perc_y: float
-    ):
+    def transform_object_matrix(self, object_name: str, transformation: Matrix):
         # Initialize Pipeline for Object
         self.get_object_ref(object_name).pipeline()
-        # Create Transformation Matrix
-        transform_matrix = homo_coords2_matrix_identity()
-        #  Check Rotation
-        if rotation_dg != 0:
-            rotation_radians = radians(rotation_dg)
-            # Compute Rotation
-            rotation_matrix = homo_coords2_matrix_translate(-rotation_point_x, -rotation_point_y)
-            rotation_matrix *= homo_coords2_matrix_rotate(rotation_radians)
-            rotation_matrix *= homo_coords2_matrix_translate(rotation_point_x, rotation_point_y)
-            # Apply Rotation
-            transform_matrix *= rotation_matrix
-        # Check Scaling
-        if scale_perc_x != 0 or scale_perc_y != 0:
-            (point_x, point_y) = self.get_object_ref(object_name).get_center_coords().as_tuple()
-            # Compute Scaling
-            scale_x = 1 + (scale_perc_x / 100)
-            scale_y = 1 + (scale_perc_y / 100)
-            scaling_matrix = homo_coords2_matrix_translate(-point_x, -point_y)
-            scaling_matrix *= homo_coords2_matrix_scale(scale_x, scale_y)
-            scaling_matrix *= homo_coords2_matrix_translate(point_x, point_y)
-            # Apply Scaling
-            transform_matrix *= scaling_matrix
-         #  Check Translate
-        if translate_x != 0 or translate_y != 0:
-            transform_matrix *= homo_coords2_matrix_translate(translate_x, translate_y)
         # Apply Transformation
-        self.get_object_ref(object_name).transform(transform_matrix)
+        self.get_object_ref(object_name).transform(transformation)
         # Persist Transform
         self.get_object_ref(object_name).pipeline_apply()
             

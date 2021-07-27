@@ -12,6 +12,7 @@ import gi
 from math import fmod, radians
 from os import getcwd
 from sys import float_info
+from functools import reduce
 from enum import IntEnum, unique
 from gi.repository import Gtk, Gdk
 from cairo import Context
@@ -23,7 +24,7 @@ from objects.wireframe_2d import Wireframe2D
 from objects.bezier_2d import Bezier2D
 from primitives.display_file import DisplayFile
 from primitives.graphical_object import GraphicalObject
-from primitives.matrix import Vector2
+from primitives.matrix import Vector2, Matrix, homo_coords2_matrix_identity, homo_coords2_matrix_rotate, homo_coords2_matrix_scale, homo_coords2_matrix_translate
 from primitives.viewport import Viewport
 from primitives.window import Window
 from storage.descriptor_obj import DescriptorOBJ
@@ -93,6 +94,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     g_adj_dialog_edit_rotate_around_y: Any = Gtk.Template.Child("g-window-object-edit-rotate-around-adjustment-y")
     g_adj_dialog_edit_scale_x: Any = Gtk.Template.Child("g-window-object-edit-scale-adjustment-x")
     g_adj_dialog_edit_scale_y: Any = Gtk.Template.Child("g-window-object-edit-scale-adjustment-y")
+    g_adj_dialog_edit_transform_list: Any = Gtk.Template.Child("g-window-object-edit-transformations-list")
     # Define Constructor
     def __init__(self, *args, **kwargs) -> None:
         # Call Super Constructor
@@ -120,6 +122,8 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         self.add_object_current_type = None
         self.add_object_wireframe_extra_points = []
         self.add_object_filled = False
+        # Define Variable to Handle Object Editing
+        self.edit_object_transform_list: List[Matrix] = []
         # Init White Color
         self.add_object_current_color = Gdk.RGBA()
         # Define Variables to Handle Scene Load
@@ -475,6 +479,8 @@ class ApplicationWindow(Gtk.ApplicationWindow):
                     box_coords_element.set_numeric(True)
         # Reset Text
         self.dialog_object_add_object_name.set_text("")
+        self.dialog_object_add_tab_text_coords.set_text("")
+        self.dialog_object_add_tab_text_curve_coords.set_text("")
         # Reset Color
         color_white: Any = Gdk.RGBA()
         self.dialog_object_add_object_color.set_rgba(color_white)
@@ -694,6 +700,9 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         self.g_adj_dialog_edit_rotate_around_y.configure(0, -float_info.max, float_info.max, 1, 10, 0)
         self.g_adj_dialog_edit_scale_x.configure(0, -float_info.max, float_info.max, 1, 10, 0)
         self.g_adj_dialog_edit_scale_y.configure(0, -float_info.max, float_info.max, 1, 10, 0)
+        # Clear Transform List
+        self.edit_object_transform_list.clear()
+        self.g_adj_dialog_edit_transform_list.clear()
         # Reset Rotation Radio Buttons
         self.dialog_object_edit_rotate_around_origin.set_active(True)
         self.dialog_object_edit_rotate_x_value.set_sensitive(False)
@@ -737,6 +746,8 @@ class ApplicationWindow(Gtk.ApplicationWindow):
 
     @Gtk.Template.Callback("on-btn-edit-objects-cancel")
     def on_btn_edit_objects_cancel(self, _button):
+        # Log
+        self.console_log(f"[Object Edit] [{self.selected_object_name}] Edition cancelled")
         # Hide Window
         self.dialog_object_edit.hide()
         # Emit Response
@@ -749,34 +760,88 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         # Emit Response
         self.dialog_object_edit.response(Gtk.ResponseType.OK)
 
+    @Gtk.Template.Callback("on-window-edit-add-translation")
+    def on_window_edit_add_translation(self, button):
+        # Get Translate Data
+        translate_x = self.g_adj_dialog_edit_translate_x.get_value()
+        translate_y = self.g_adj_dialog_edit_translate_y.get_value()
+        # Add item into to GUI
+        self.g_adj_dialog_edit_transform_list.append([
+            f"Translate [X: {translate_x}] [Y: {translate_y}]"
+        ])
+        # Ignore if no translation
+        if translate_x == 0 and translate_y == 0:
+            return
+        # Define Transform
+        transform_matrix = homo_coords2_matrix_translate(translate_x, translate_y)
+        # Apply Transform
+        self.edit_object_transform_list.append(transform_matrix)
+        # Log
+        self.console_log(f"[Edit] Translated {self.selected_object_name} by {translate_x} units in X and {translate_y} units in Y")
+    @Gtk.Template.Callback("on-window-edit-add-rotation")
+    def on_window_edit_add_rotation(self, _button):
+        # Get Rotation Data
+        rotate_degrees = self.g_adj_dialog_edit_rotate_amount.get_value()
+        rotate_degrees = fmod(rotate_degrees, 360)
+        rotate_point_x = self.g_adj_dialog_edit_rotate_around_x.get_value()
+        rotate_point_y = self.g_adj_dialog_edit_rotate_around_y.get_value()
+        # Add item into to GUI
+        self.g_adj_dialog_edit_transform_list.append([
+            f"Rotate [θ: {rotate_degrees}°] [O: ({rotate_point_x},{rotate_point_y})]"
+        ])
+        # Ignore if no rotation
+        if rotate_degrees == 0:
+            return
+        # Define Transform
+        rotation_radians = radians(rotate_degrees)
+        # Compute Rotation
+        rotation_matrix = homo_coords2_matrix_translate(-rotate_point_x, -rotate_point_y)
+        rotation_matrix *= homo_coords2_matrix_rotate(rotation_radians)
+        rotation_matrix *= homo_coords2_matrix_translate(rotate_point_x, rotate_point_y)
+        # Append Rotation
+        self.edit_object_transform_list.append(rotation_matrix)
+        # Log
+        self.console_log(f"[Edit] Rotated {self.selected_object_name} by {rotate_degrees} around [{rotate_point_x}, {rotate_point_y}]")
+    @Gtk.Template.Callback("on-window-edit-add-scaling")
+    def on_window_edit_add_scaling(self, _button):
+        # Get Scaling Data
+        scale_x = self.g_adj_dialog_edit_scale_x.get_value()
+        scale_y = self.g_adj_dialog_edit_scale_y.get_value()
+        # Add item into to GUI
+        self.g_adj_dialog_edit_transform_list.append([f"Scale [X: {scale_x}%] [Y: {scale_y}%]"])
+        # Ignore if no Scalling
+        if scale_x == 0 and scale_y == 0:
+            return
+        # Define Transform
+        (point_x, point_y) = self.display_file.get_object_ref(self.selected_object_name).get_center_coords().as_tuple()
+        # Compute Scaling
+        scale_x = 1 + (scale_x / 100)
+        scale_y = 1 + (scale_y / 100)
+        scaling_matrix = homo_coords2_matrix_translate(-point_x, -point_y)
+        scaling_matrix *= homo_coords2_matrix_scale(scale_x, scale_y)
+        scaling_matrix *= homo_coords2_matrix_translate(point_x, point_y)
+        # Append Scaling
+        self.edit_object_transform_list.append(scaling_matrix)
+        # Log
+        self.console_log(f"[Edit] Scaled {self.selected_object_name} by {scale_x}% in X and {scale_y}% in Y")
+
     @Gtk.Template.Callback("on-dialog-edit-objects-response")
     def on_dialog_edit_objects_response(self, _dialog, response_id):
         # Ignore if canceling
         if response_id == Gtk.ResponseType.OK:
-            # Get Translate Data
-            translate_x = self.g_adj_dialog_edit_translate_x.get_value()
-            translate_y = self.g_adj_dialog_edit_translate_y.get_value()
-            # Get Rotation Data
-            rotate_degrees = self.g_adj_dialog_edit_rotate_amount.get_value()
-            rotate_degrees = fmod(rotate_degrees, 360)
-            rotate_point_x = self.g_adj_dialog_edit_rotate_around_x.get_value()
-            rotate_point_y = self.g_adj_dialog_edit_rotate_around_y.get_value()
-            # Get Scaling Data
-            scale_x = self.g_adj_dialog_edit_scale_x.get_value()
-            scale_y = self.g_adj_dialog_edit_scale_y.get_value()
-            # Make Transform
-            self.display_file.transform_object(
-                self.selected_object_name, translate_x, translate_y,
-                rotate_degrees, rotate_point_x, rotate_point_y,
-                scale_x, scale_y
+            # Skip if no transforms needed
+            if len(self.edit_object_transform_list) == 0:
+                return
+            # Join Transforms
+            transforms = reduce(
+                lambda acc_trans, it_trans: acc_trans * it_trans,
+                self.edit_object_transform_list,
+                homo_coords2_matrix_identity()
             )
+            # Make Transform
+            self.display_file.transform_object_matrix(self.selected_object_name, transforms)
             # Log
-            if translate_x != 0 or translate_y != 0:
-                self.console_log(f"[Edit] Translated {self.selected_object_name} by {translate_x} units in X and {translate_y} units in Y")
-            if rotate_degrees != 0:
-                self.console_log(f"[Edit] Rotated {self.selected_object_name} by {rotate_degrees} around [{rotate_point_x}, {rotate_point_y}]")
-            if scale_x != 0 or scale_y != 0:
-                self.console_log(f"[Edit] Scaled {self.selected_object_name} by {scale_x}% in X and {scale_y}% in Y")
+            self.console_log(f"[Object Edit] [{self.selected_object_name}] Edition applied")
 
     # Handle Scene Open
     @Gtk.Template.Callback("on-menu-scene-open")

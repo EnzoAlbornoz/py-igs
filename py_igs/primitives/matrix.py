@@ -50,6 +50,7 @@ class Matrix:
         new_elements = [[e1 - e2 for (e1, e2) in zip(line_self, line_other)] for (line_self, line_other) in zip(self.lines(), other.lines())]
         # Create new Matrix and return it
         return Matrix(new_elements)
+
     def __mul__(self, other: int | float | Matrix) -> Matrix:
         if type(other) is Matrix:
             # Check Dimensions
