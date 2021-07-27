@@ -17,6 +17,7 @@ from enum import IntEnum, unique
 from gi.repository import Gtk, Gdk
 from cairo import Context
 from helpers import extract_points_as_vec2_from_box, gdk_rgba_as_tuple, parse_text_into_points_2d
+from objects.bspline_2d import BSpline2D
 from objects.line_2d import Line2D
 from objects.object_type import ObjectType
 from objects.point_2d import Point2D
@@ -574,7 +575,6 @@ class ApplicationWindow(Gtk.ApplicationWindow):
                 # Get Value From Button
                 tree_iter: int = self.dialog_object_add_tab_text_curve_type.get_active_iter()
                 curve_type_str: str = self.dialog_object_add_tab_text_curve_type.get_model()[tree_iter][1]
-                print(curve_type_str)
                 curve_type = ObjectType(int(curve_type_str))
                 # Get Points
                 points = parse_text_into_points_2d(points_text)
@@ -582,9 +582,9 @@ class ApplicationWindow(Gtk.ApplicationWindow):
                 if curve_type == ObjectType.BEZIER_2D:
                     # Its a Point
                     object_to_build = Bezier2D(0.01, *points)
-                # elif curve_type == ObjectType.BSPLINE_2D:
-                #     # Its a Line
-                #     object_to_build = BSpline2D(accuracy_step=0.01, *points)
+                elif curve_type == ObjectType.BSPLINE_2D:
+                    # Its a Line
+                    object_to_build = BSpline2D(0.01, *points)
             # Get Object Name
             object_name = self.dialog_object_add_object_name.get_text()
             # Get Object Color

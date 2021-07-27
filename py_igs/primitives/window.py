@@ -23,7 +23,8 @@ class Window:
             ObjectType.POINT_2D: EClippingMethod.POINT_CLIP,
             ObjectType.LINE_2D: EClippingMethod.LINE_LIANG_BARSKY,
             ObjectType.WIREFRAME_2D: EClippingMethod.POLY_WEILER_ATHERTON_WITH_LB,
-            ObjectType.BEZIER_2D: EClippingMethod.LINE_LIANG_BARSKY
+            ObjectType.BEZIER_2D: EClippingMethod.LINE_LIANG_BARSKY,
+            ObjectType.BSPLINE_2D: EClippingMethod.LINE_LIANG_BARSKY
         }
     # Define Getters and Setters
     def get_width(self) -> float:

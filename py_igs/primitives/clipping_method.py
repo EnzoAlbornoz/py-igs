@@ -145,8 +145,8 @@ def liang_barsky_clip_line(point_a: Vector2, point_b: Vector2) -> Tuple[Vector2,
     p_values = [-delta_x, delta_x, -delta_y, delta_y]
     q_values = [(point_a.get_x() + 1), (1 - point_a.get_x()), (point_a.get_y() + 1), (1 - point_a.get_y())]
     # Compute Zetas
-    zeta_one = max(0, *[(q_values[idx] / p_value) for (idx, p_value) in enumerate(p_values) if p_value < 0])
-    zeta_two = min(1, *[(q_values[idx] / p_value) for (idx, p_value) in enumerate(p_values) if p_value > 0])
+    zeta_one = max(0, 0, *[(q_values[idx] / p_value) for (idx, p_value) in enumerate(p_values) if p_value < 0])
+    zeta_two = min(1, 1, *[(q_values[idx] / p_value) for (idx, p_value) in enumerate(p_values) if p_value > 0])
     # Check Outside
     if zeta_one > zeta_two:
         return None
