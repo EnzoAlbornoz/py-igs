@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "py-igs"
-version = "0.2.0"
+version = "0.5.0"
 description = ""
 authors = ["Enzo Albornoz <enzocoelhoalbornoz@gmail.com>"]
 
