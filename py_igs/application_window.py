@@ -9,6 +9,7 @@
 # Import Dependencies
 from typing import Any, List
 import gi
+from time import perf_counter
 from math import fmod, radians
 from os import getcwd
 from sys import float_info
@@ -156,7 +157,10 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         ctx.set_source_rgba(1, 1, 1, 1)
         ctx.set_line_width(1)
         # Draw Viewport
+        print("------------------------------------------")
+        time_c = perf_counter()
         self.viewport.draw(ctx, self.display_file)
+        print(f"Viewport Draw: {(perf_counter() - time_c) * 1000}ms")
         # Draw Outer Viewport
         ctx.set_source_rgba(1, 1, 1, 1)
         ctx.set_line_width(1)

@@ -1,5 +1,6 @@
 # Import Dependencies
 from __future__ import annotations
+from time import perf_counter
 from typing import TYPE_CHECKING
 import cairo
 from primitives.matrix import Matrix, homo_coords2_matrix_scale, homo_coords2_matrix_translate
@@ -106,4 +107,6 @@ class Viewport:
         # Check Window
         if self.window is not None:
             # Call Draw on Window
+            time_c = perf_counter()
             self.window.draw(cairo, display_file, viewport_transform)
+            print(f"Window Draw: {(perf_counter() - time_c) * 1000}ms")

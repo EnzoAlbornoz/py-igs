@@ -1,10 +1,12 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from time import perf_counter
+from typing import List, TYPE_CHECKING
 from math import acos
 
 import cairo
 from objects.object_type import ObjectType
 from primitives.clipping_method import EClippingMethod
+from primitives.graphical_object import GraphicalObject
 from primitives.matrix import Matrix, Vector2, homo_coords2_matrix_rotate, homo_coords2_matrix_scale, homo_coords2_matrix_translate
 if TYPE_CHECKING:
     from primitives.display_file import DisplayFile
@@ -190,25 +192,35 @@ class Window:
     def draw(self, cairo: cairo.Context, display_file: DisplayFile, viewport_transform: Matrix) -> None:
         # Compute Normalized Coordinates for the Window
         normalize = self.as_normalized_coordinates_transform()
-        # Draw Display File Objects
+        # Normalize Drawable Objects
         for drawable_object in display_file.get_drawable_objects():
             # Draw Object - Start Pipeline
             drawable_object.pipeline()
+        time_c = perf_counter()
+        for drawable_object in display_file.get_drawable_objects():
             # Normalize - World -> Generic Window
             drawable_object.transform(normalize)
-            # Future Feature - Clipping
-            # print("Line: ", drawable_object)
+        print(f"Normalization Time: {(perf_counter() - time_c) * 1000}ms")
+        # Clip Display File Objects
+        clipped_objects: List[GraphicalObject] = []
+        time_c = perf_counter()
+        for drawable_object in display_file.get_drawable_objects():
+            # Clip Objects
             clipping_method = self.cliping_methods[drawable_object.get_type()]
             clipped_object = drawable_object.clip(clipping_method)
             # Check if need render
             if clipped_object is not None:
-                # Viewport - Generic Window -> Device Window
-                clipped_object.transform(viewport_transform)
-                # Draw in Device Window
-                clipped_object.draw(cairo)
-                # End Pipeline
-                clipped_object.pipeline_abort()
+                clipped_objects.append(clipped_object)
             else:
                 drawable_object.pipeline_abort()
-            # Reset Color
-            cairo.set_source_rgba(1, 1, 1, 1)
+        print(f"Clip Time: {(perf_counter() - time_c) * 1000}ms")
+        # Draw Display File Objects
+        time_c = perf_counter()
+        for clipped_object in clipped_objects:
+            # Viewport - Generic Window -> Device Window
+            clipped_object.transform(viewport_transform)
+            # Draw in Device Window
+            clipped_object.draw(cairo)
+            # End Pipeline
+            clipped_object.pipeline_abort()
+        print(f"Render Time: {(perf_counter() - time_c) * 1000}ms")
