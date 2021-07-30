@@ -24,11 +24,9 @@ fn main([[builtin(global_invocation_id)]] gid: vec3<u32>) {
     let object_idx: u32 = gid.x;
     // Apply Multiplication To Points
     let input_object_length: u32 = input_objects.points_len;
-    // for (var i: u32 = u32(0); i < input_object_length; i = i + u32(1)) {
-    // let sla = transformation_matrix.data * input_objects.points[0];
-    transformed_objects.points[0] = input_objects.points[0] * transformation_matrix.data;
-    // transformed_objects.points[0] = transformation_matrix.data[0];
-    // }
+    for (var i: u32 = u32(0); i < input_object_length; i = i + u32(1)) {
+        transformed_objects.points[0] = input_objects.points[0] * transformation_matrix.data;
+    }
     // Update Buffer Length
     transformed_objects.points_len = input_objects.points_len;
 }
