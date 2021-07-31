@@ -1,4 +1,5 @@
 from __future__ import annotations
+from array import array
 from math import ceil
 # from itertools import chain
 from typing import List, TYPE_CHECKING
@@ -11,7 +12,7 @@ if TYPE_CHECKING:
     from cairo import Context
     from primitives.matrix import Matrix
 
-SPLINE_MATRIX = Matrix([
+SPLINE_MATRIX = Matrix.from_list([
     [-1/6, 3/6,-3/6, 1/6],
     [ 3/6,-6/6, 3/6, 0/6],
     [-3/6, 0/6, 3/6, 0/6],
@@ -37,7 +38,7 @@ class BSpline2D(GraphicalObject):
         d1 = accuracy
         d2 = d1 * accuracy
         d3 = d2 * accuracy
-        STEP_MATRIX = Matrix([
+        STEP_MATRIX = Matrix.from_list([
             [   0,   0,  0, 1],
             [  d3,  d2, d1, 0],
             [6*d3,2*d2,  0, 0],
@@ -50,8 +51,8 @@ class BSpline2D(GraphicalObject):
             # Get Points
             cpoints = control_points[idx:idx + 4]
             # Compute Component Parts
-            geo_x_mat = Matrix([[cp.get_x()] for cp in cpoints])
-            geo_y_mat = Matrix([[cp.get_y()] for cp in cpoints])
+            geo_x_mat = Matrix(4, array("d", [cp.get_x() for cp in cpoints]))
+            geo_y_mat = Matrix(4, array("d", [cp.get_y() for cp in cpoints]))
             # Define Initial Values
             x0, x1, x2, x3 = (STEP_SPLINE_MATRIX * geo_x_mat).columns()[0]
             y0, y1, y2, y3 = (STEP_SPLINE_MATRIX * geo_y_mat).columns()[0]
