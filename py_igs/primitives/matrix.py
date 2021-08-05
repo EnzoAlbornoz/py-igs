@@ -1,10 +1,32 @@
 # Static Imports
 from __future__ import annotations
-from itertools import chain, zip_longest
+from itertools import zip_longest
 from typing import Any, Iterable, List, Tuple, TypeVar
 from math import cos, sin, sqrt
-from array import array, ArrayType
+# from array import array, ArrayType
 
+
+# Use Numpy + Numba to Speed Up Calculations ===================================
+from numba import njit
+from numpy import float64, array, identity
+from numpy.typing import NDArray
+
+@njit
+def __matrix_multiply__(matrixA: NDArray[float64], matrixB: NDArray[float64]) -> NDArray[float64]:
+    return matrixA @ matrixB
+
+@njit
+def __matrix_scale__(matrixA: NDArray[float64], scalar: float64) -> NDArray[float64]:
+    return matrixA * scalar
+
+@njit
+def __matrix_sum__(matrixA: NDArray[float64], matrixB: NDArray[float64]) -> NDArray[float64]:
+    return matrixA + matrixB
+
+@njit
+def __matrix_sub__(matrixA: NDArray[float64], matrixB: NDArray[float64]) -> NDArray[float64]:
+    return matrixA - matrixB
+# ==============================================================================
 # Define Helper Function
 T = TypeVar("T")
 def chunks(iterable: Iterable[T], chunk_size: int, fillValue: T = None) -> List[List[T]]:
@@ -12,31 +34,28 @@ def chunks(iterable: Iterable[T], chunk_size: int, fillValue: T = None) -> List[
 # Define Classes
 class Matrix:
     # Define Matrix Initialization
-    def __init__(self, n_cols: int, elements: ArrayType[float]) -> None:
+    def __init__(self, elements: NDArray[float64]) -> None:
         # Force Complete Matrices
-        self.n_cols = n_cols
-        self.n_lines = len(elements) // n_cols
         self.elements = elements
 
     @staticmethod
     def from_list(elements: List[List[float]]) -> Matrix:
         # Define number of columns
-        n_cols = len(elements[0])
-        new_elements = array("d", chain.from_iterable(elements))
+        new_elements: NDArray[float64] = array(elements, dtype=float64)
         # Return Matrix
-        return Matrix(n_cols, new_elements)
+        return Matrix(new_elements)
 
     def dimensions(self) -> Tuple[int, int]:
-        return (self.n_lines, self.n_cols)
+        # Get Shape
+        (nlines, ncols) = tuple(self.elements.shape)
+        return (nlines, ncols)
 
     def lines(self) -> List[List[float]]:
-        return chunks(self.elements.tolist(), self.n_cols, 0)
+        return self.elements.tolist()
     
     def columns(self) -> List[List[float]]:
-        # Fetch Dimensions
-        (lines_n, columns_n) = self.dimensions()
         # Compute Column Chunks
-        return [[self.elements[i * columns_n + j] for i in range(lines_n)] for j in range(columns_n)]
+        return self.elements.transpose().tolist()
     # Define Print Function
     def __str__(self) -> str:
         return f"Matrix: {self.elements.__str__()}"
@@ -46,56 +65,19 @@ class Matrix:
         return repr
     # Define Basic Matrix Operations
     def __add__(self, other: Matrix) -> Matrix:
-        # Check Dimensions
-        dim_self = self.dimensions()
-        dim_other = other.dimensions()
-        if dim_self != dim_other:
-            raise TypeError(f"Tried to add matrix of dimensions {dim_self} to a matrix of dimensions {dim_other}")
-        # Alloc new Matrix
-        new_elements = array("d", self.elements)
-        # Sum Operation
-        for (idx, other_el) in enumerate(other.elements):
-            new_elements[idx] += other_el
         # Create new Matrix and return it
-        return Matrix(self.n_cols, new_elements)
+        return Matrix(__matrix_sum__(self.elements, other.elements))
     def __sub__(self, other: Matrix) -> Matrix:
-        # Check Dimensions
-        dim_self = self.dimensions()
-        dim_other = other.dimensions()
-        if dim_self != dim_other:
-            raise TypeError(f"Tried to subtract matrix of dimensions {dim_self} to a matrix of dimensions {dim_other}")
-        # Alloc new Matrix
-        new_elements = array("d", self.elements)
-        # Sum Operation
-        for (idx, other_el) in enumerate(other.elements):
-            new_elements[idx] -= other_el
         # Create new Matrix and return it
-        return Matrix(self.n_cols, new_elements)
+        return Matrix(__matrix_sub__(self.elements, other.elements))
 
     def __mul__(self, other: int | float | Matrix) -> Matrix:
         if type(other) is Matrix:
-            # Check Dimensions
-            (final_lines, col_self) = self.dimensions()
-            (lin_other, final_cols) = other.dimensions()
-            if (col_self != lin_other):
-                raise TypeError(f"Tried to multiply a matrix of {col_self} columns with a matrix of {lin_other} lines")
-            # Alloc Matrix
-            new_elements = array("d", [0] * (final_lines * final_cols))
-            # Multiply Operation
-            for i in range(final_lines):
-                for j in range(final_cols):
-                    for k in range(col_self):
-                        new_elements[j + i * final_cols] += self.elements[k + i * col_self] * other.elements[j + k * final_cols]
             # Create new Matrix and return it
-            return Matrix(final_cols, new_elements)
-        elif type(other) is int or type(other) is float:
-            # Alloc Matrix
-            new_elements = array("d", self.elements)
-            # Multiply Operation
-            for i in range(len(new_elements)):
-                new_elements[i] *= other
+            return Matrix(__matrix_multiply__(self.elements, other.elements))
+        elif type(other) is float or type(other) is int:
             # Create new Matrix and return it
-            return Matrix(self.n_cols, new_elements)
+            return Matrix(__matrix_scale__(self.elements, float64(float(other))))
         else:
             raise TypeError(f"Cannot multitply a matrix with {type(other)}")
     def __rmul__(self, other: Any) -> Matrix:
@@ -108,16 +90,9 @@ class Matrix:
         else:
             return False
 
-    def as_transverse(self) -> Matrix:
-        # Alloc new Array
-        new_elements = array("d", self.elements)
-        # Transverse Matrix
-        for n in range(self.n_cols * self.n_lines):
-            i = n // self.n_lines
-            j = n % self.n_lines
-            new_elements[n] = self.elements[self.n_cols * j + i]
+    def as_transposed(self) -> Matrix:
         # Create new Matrix and return it
-        return Matrix(self.n_lines, new_elements)
+        return Matrix(self.elements.transpose())
     # Define Type Coercion
     def try_into_vec2(self) -> Vector2:
         # Check Dimensions
@@ -153,7 +128,8 @@ class Vector2(Matrix):
     # Define Constructor
     def __init__(self, x: float, y: float) -> None:
         # Call Super Constructor
-        super().__init__(2, array("d", [x, y]))
+        elements: NDArray[float64] = array([[x, y]], dtype=float64)
+        super().__init__(elements)
     # Getters
     def as_tuple(self) -> Tuple[float, float]:
         # Destructure Matrix
@@ -189,7 +165,8 @@ class Vector3(Matrix):
     # Define Constructor
     def __init__(self, x: float, y: float, z: float) -> None:
         # Call Super Constructor
-        super().__init__(3, array("d", [x, y, z]))
+        elements: NDArray[float64] = array([[x, y, z]], dtype=float64)
+        super().__init__(elements)
     # Define String
     def __str__(self) -> str:
         return f"Vector2: [{self.elements[0]}, {self.elements[1]}, {self.elements[2]}]"
@@ -227,7 +204,8 @@ class Vector3(Matrix):
 # Define Matrices Helpers
 def gen_identity_matrix(size: int) -> Matrix:
     # Define and Return Matrix
-    return Matrix(size, array("d", [1.0 if ((i % (size + 1)) == 0) else 0.0 for i in range(size**2)]))
+    elements: NDArray[float64] = identity(size, dtype=float64)
+    return Matrix(elements)
 
 # Define 2D Homogeneus Transformation Matrices
 def homo_coords2_matrix_identity() -> Matrix:
@@ -235,12 +213,15 @@ def homo_coords2_matrix_identity() -> Matrix:
 
 def homo_coords2_matrix_translate(dx: float, dy: float) -> Matrix:
     # Define and Return Matrix
-    return Matrix(3, array("d", [1., 0., 0., 0., 1., 0., dx, dy, 1.]))
+    elements: NDArray[float64] = array([[1, 0, 0], [0, 1, 0], [dx, dy, 1]], dtype=float64)
+    return Matrix(elements)
 
 def homo_coords2_matrix_scale(sx: float, sy: float) -> Matrix:
     # Define and Return Matrix
-    return Matrix(3, array("d",[sx, 0., 0., 0., sy, 0., 0., 0., 1.]))
+    elements: NDArray[float64] = array([[sx, 0, 0], [0, sy, 0], [0, 0, 1]], dtype=float64)
+    return Matrix(elements)
 
 def homo_coords2_matrix_rotate(theta: float) -> Matrix:
     # Define and Return Matrix
-    return Matrix(3, array("d", [cos(theta), sin(theta), 0., -sin(theta), cos(theta), 0., 0., 0., 1.]))
+    elements: NDArray[float64] = array([[cos(theta), sin(theta), 0], [-sin(theta), cos(theta), 0], [0, 0, 1]])
+    return Matrix(elements) 

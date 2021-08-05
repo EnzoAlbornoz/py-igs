@@ -8,6 +8,9 @@ authors = ["Enzo Albornoz <enzocoelhoalbornoz@gmail.com>"]
 python = "~3.8"
 pycairo = "^1.20.0"
 PyGObject = "^3.40.1"
+numba = "^0.53.1"
+numpy = "^1.21.1"
+scipy = "^1.7.1"
 
 
 [tool.poetry.dev-dependencies]
