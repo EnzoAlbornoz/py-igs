@@ -5,6 +5,7 @@ from math import acos
 import cairo
 from objects.object_type import ObjectType
 from primitives.clipping_method import EClippingMethod
+from time import perf_counter_ns
 from primitives.matrix import Matrix, Vector2, homo_coords2_matrix_rotate, homo_coords2_matrix_scale, homo_coords2_matrix_translate
 if TYPE_CHECKING:
     from primitives.display_file import DisplayFile
@@ -26,6 +27,8 @@ class Window:
             ObjectType.BEZIER_2D: EClippingMethod.LINE_LIANG_BARSKY,
             ObjectType.BSPLINE_2D: EClippingMethod.LINE_LIANG_BARSKY
         }
+        # Define Statistics
+        self.show_stats = False
     # Define Getters and Setters
     def get_width(self) -> float:
         current_theta = self.get_vec_up_theta()
@@ -188,27 +191,48 @@ class Window:
 
     # Define Rendering
     def draw(self, cairo: cairo.Context, display_file: DisplayFile, viewport_transform: Matrix) -> None:
+        comp_norm_time = 0
+        norm_time = 0
+        clip_time = 0
+        draw_time = 0
         # Compute Normalized Coordinates for the Window
+        time = perf_counter_ns()
         normalize = self.as_normalized_coordinates_transform()
+        comp_norm_time = perf_counter_ns() - time
         # Draw Display File Objects
+        render_all = perf_counter_ns()
         for drawable_object in display_file.get_drawable_objects():
             # Draw Object - Start Pipeline
+            time = perf_counter_ns()
             drawable_object.pipeline()
             # Normalize - World -> Generic Window
             drawable_object.transform(normalize)
+            norm_time += perf_counter_ns() - time
+            time = perf_counter_ns()
             # Future Feature - Clipping
             # print("Line: ", drawable_object)
             clipping_method = self.cliping_methods[drawable_object.get_type()]
             clipped_object = drawable_object.clip(clipping_method)
+            clip_time += perf_counter_ns() - time
             # Check if need render
             if clipped_object is not None:
+                time = perf_counter_ns()
                 # Viewport - Generic Window -> Device Window
                 clipped_object.transform(viewport_transform)
                 # Draw in Device Window
                 clipped_object.draw(cairo)
+                draw_time += perf_counter_ns() - time
                 # End Pipeline
                 clipped_object.pipeline_abort()
             else:
                 drawable_object.pipeline_abort()
             # Reset Color
             cairo.set_source_rgba(1, 1, 1, 1)
+        render_all = perf_counter_ns() - render_all
+        if self.show_stats:
+            print("------------------------------")
+            print(f"Normal Mat Time:   \t{(comp_norm_time/1000000):.3f} ms")
+            print(f"Normalization Time:\t{(norm_time/1000000):.3f} ms")
+            print(f"Clipping Time:     \t{(clip_time/1000000):.3f} ms")
+            print(f"Draw Time:         \t{(draw_time/1000000):.3f} ms")
+            print(f"Frame Time:        \t{(render_all/1000000):.3f} ms")
