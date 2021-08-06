@@ -10,6 +10,7 @@
 ## Installation
 To install this software you will need these dependencies (with their thevelopment libraries):
 
+- Numba/SciPy/NumPy Compatible Setup (`https://numba.readthedocs.io/en/stable/user/installing.html`) (Use for C matrix multiplication)
 - Gtk 3.20+
 - PyGOBject Dependencies (`libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3.0`)
 - Python 3.8+
