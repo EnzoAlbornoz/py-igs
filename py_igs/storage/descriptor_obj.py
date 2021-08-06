@@ -3,6 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Dict, List, Tuple
 from pathlib import Path
+from objects.bspline_2d import BSpline2D
+from objects.bezier_2d import Bezier2D
 from objects.point_2d import Point2D
 from objects.line_2d import Line2D
 from objects.wireframe_2d import Wireframe2D
@@ -45,6 +47,7 @@ class DescriptorOBJ:
         materials: Dict[str, Tuple[float, float, float]] = dict()
         current_reading_material = "loaded_material"
         current_using_material: str | None = None
+        current_curve_type: str = "bspline"
         # Read File
         with file_path.open() as file:
             # Iterate over Lines
@@ -92,6 +95,35 @@ class DescriptorOBJ:
                         objects[f"loaded_object_{len(objects)}"] = line
                     else:
                         objects[current_object] = line
+                elif line.startswith("curv2 "):
+                    # Line
+                    _, *values = [el for el in line.strip("\n").split(" ") if len(el) > 0]
+                    # Parse FROM and TO
+                    idx_vecs = [int(value.split("/")[0]) for value in values]
+                    # Load Vertices into Vector 2D
+                    curve_vecs = [vertices_positions[idx_vec - 1] for idx_vec in idx_vecs]
+                    curve_vecs = [
+                        Vector2(
+                            (vx * (0.5 * window_width if is_normalized else 1)) + window_center.get_x(),
+                            (vy * (0.5 * window_height if is_normalized else 1)) + window_center.get_y()
+                        )
+                        for (vx, vy, *_) in curve_vecs
+                    ]
+                    # Build Object
+                    curve = Bezier2D(0.01, *curve_vecs) if current_curve_type == "bezier" else BSpline2D(0.01, *curve_vecs)
+                    # Check Filled
+                    if isinstance(curve, Wireframe2D):
+                        curve.set_filled(fill_faces)
+                    # Check Color
+                    if current_using_material is not None:
+                        # Update Object Material
+                        material_kd_rgb = materials[current_using_material]
+                        curve.set_color((*material_kd_rgb, 1))
+                    # Add curve to Objects
+                    if current_object is None:
+                        objects[f"loaded_object_{len(objects)}"] = curve
+                    else:
+                        objects[current_object] = curve
                 elif line.startswith("f "):
                     # Face (Triangle)
                     # Get Values List
@@ -150,6 +182,11 @@ class DescriptorOBJ:
                     _, object_name = [el for el in line.strip("\n").split(" ") if len(el) > 0]
                     # Update Object Name
                     current_object = object_name.strip().strip("\n")
+                elif line.startswith("cstype "):
+                    # Object Name
+                    _, curve_type = [el for el in line.strip("\n").split(" ") if len(el) > 0]
+                    # Update Curve Type
+                    current_curve_type = curve_type
                 elif line.startswith("w "):
                     # Definition of Window Sizing
                     _, *values = [el for el in line.strip("\n").split(" ") if len(el) > 0]
@@ -162,7 +199,7 @@ class DescriptorOBJ:
                     window_center = Vector2(vc_x, vc_y)
                     window_width = int(v_w)
                     window_height = int(v_h)
-                    is_normalized = True
+                    # is_normalized = True
                 elif line.startswith("mtllib"):
                     # Import Material File
                     _, material_file_path = [el for el in line.strip("\n").split(" ") if len(el) > 0]
@@ -209,7 +246,6 @@ class DescriptorOBJ:
         window_center = window.get_center()
         window_width = window.get_width()
         window_height = window.get_height()
-        normalization_matrix = window.as_normalized_coordinates_transform()
         # Define Lists
         vertices: List[Vector2] = []
         object_lines: List[str] = []
@@ -227,7 +263,6 @@ class DescriptorOBJ:
         for (object_name, _, object_graphics) in objects:
             # Normalized Object
             object_graphics.pipeline()
-            object_graphics.transform(normalization_matrix)
             if isinstance(object_graphics, Point2D):
                 points = [object_graphics.pipeline_point]
                 vertex_idxs: List[int] = []
@@ -263,6 +298,48 @@ class DescriptorOBJ:
                 # Declare Object
                 content: List[str] = []
                 content.append(f"o {object_name}")
+                content.append(f"usemtl mtl_{object_name.strip()}")
+                content.append("curv2 " + " ".join(map(str, vertex_idxs)))
+                # Save Into List
+                object_lines.append("\n".join(content))
+                materials.append("\n".join(material_lines))
+            elif isinstance(object_graphics, Bezier2D):
+                points = object_graphics.control_points
+                vertex_idxs: List[int] = []
+                for point in points:
+                    vertices.append(point)
+                    vertex_idx = len(vertices)
+                    vertex_idxs.append(vertex_idx)
+                # Declare Materials
+                (kd_r, kd_g, kd_b, *_) = object_graphics.color
+                material_lines: List[str] = []
+                material_lines.append(f"newmtl mtl_{object_name.strip()}")
+                material_lines.append(f"Kd {float(kd_r)} {float(kd_g)} {float(kd_b)}")
+                # Declare Object
+                content: List[str] = []
+                content.append(f"o {object_name}")
+                content.append("cstype bezier")
+                content.append(f"usemtl mtl_{object_name.strip()}")
+                content.append("curv2 " + " ".join(map(str, vertex_idxs)))
+                # Save Into List
+                object_lines.append("\n".join(content))
+                materials.append("\n".join(material_lines))
+            elif isinstance(object_graphics, BSpline2D):
+                points = object_graphics.control_points
+                vertex_idxs: List[int] = []
+                for point in points:
+                    vertices.append(point)
+                    vertex_idx = len(vertices)
+                    vertex_idxs.append(vertex_idx)
+                # Declare Materials
+                (kd_r, kd_g, kd_b, *_) = object_graphics.color
+                material_lines: List[str] = []
+                material_lines.append(f"newmtl mtl_{object_name.strip()}")
+                material_lines.append(f"Kd {float(kd_r)} {float(kd_g)} {float(kd_b)}")
+                # Declare Object
+                content: List[str] = []
+                content.append(f"o {object_name}")
+                content.append("cstype bspline")
                 content.append(f"usemtl mtl_{object_name.strip()}")
                 content.append("l " + " ".join(map(str, vertex_idxs)))
                 # Save Into List
