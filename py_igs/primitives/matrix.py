@@ -7,23 +7,23 @@ from math import cos, sin, sqrt
 
 
 # Use Numpy + Numba to Speed Up Calculations ===================================
-from numba import njit
+from numba import jit #type: ignore
 from numpy import float64, array, identity
 from numpy.typing import NDArray
 
-@njit
+@jit(nopython=True, nogil=True, cache=True, fastmath=True) #type: ignore
 def __matrix_multiply__(matrixA: NDArray[float64], matrixB: NDArray[float64]) -> NDArray[float64]:
     return matrixA @ matrixB
 
-@njit
+@jit(nopython=True, nogil=True, cache=True, fastmath=True) #type: ignore
 def __matrix_scale__(matrixA: NDArray[float64], scalar: float64) -> NDArray[float64]:
     return matrixA * scalar
 
-@njit
+@jit(nopython=True, nogil=True, cache=True, fastmath=True) #type: ignore
 def __matrix_sum__(matrixA: NDArray[float64], matrixB: NDArray[float64]) -> NDArray[float64]:
     return matrixA + matrixB
 
-@njit
+@jit(nopython=True, nogil=True, cache=True, fastmath=True) #type: ignore
 def __matrix_sub__(matrixA: NDArray[float64], matrixB: NDArray[float64]) -> NDArray[float64]:
     return matrixA - matrixB
 # ==============================================================================
