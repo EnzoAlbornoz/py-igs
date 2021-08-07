@@ -39,5 +39,8 @@ MANIFEST.in
 pip-wheel-metadata
 /poetry.toml
 
+# Python Cache
+**/__pycache__/
+
 # Glade Files
 resources/interface/*.glade~
