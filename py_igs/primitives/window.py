@@ -75,23 +75,8 @@ class Window:
         self.height *= scale_factor_y
 
     def rotate(self, theta_in_radians: float = 0):
-        # Compute Window Points as Vectors
-        center = self.get_center()
-        (center_x, center_y) = center.as_tuple()
-        # Translate into origin
-        translate_origin = homo_coords2_matrix_translate(-center_x, -center_y)
-        # Perform Rotation
-        rotate_theta = homo_coords2_matrix_rotate(theta_in_radians)
-        # Translate Back to Center
-        translate_back = homo_coords2_matrix_translate(center_x, center_y)
-        # Compute Transforms
-        grouped_transform = translate_origin * rotate_theta * translate_back
-        center = center.as_vec3(1) * grouped_transform
-        # Destructure Values
-        (x_center, y_center) = center.try_into_vec2().as_tuple()
-        # Update Data
-        self.x_center = x_center
-        self.y_center = y_center
+        # Update Value
+        self.theta += theta_in_radians
 
     # Define Corners
     def get_corner_bottom_left(self) -> Vector2:
