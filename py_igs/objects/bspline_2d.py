@@ -1,5 +1,4 @@
 from __future__ import annotations
-from array import array
 from math import ceil
 # from itertools import chain
 from typing import List, TYPE_CHECKING
@@ -8,6 +7,8 @@ from primitives.clipping_method import EClippingMethod, cohen_sutherland_clip_li
 from primitives.graphical_object import GraphicalObject
 from objects.object_type import ObjectType
 from primitives.matrix import Vector2, Matrix
+from numpy import array, float64
+from numpy.typing import NDArray
 if TYPE_CHECKING:
     from cairo import Context
     from primitives.matrix import Matrix
@@ -51,8 +52,10 @@ class BSpline2D(GraphicalObject):
             # Get Points
             cpoints = control_points[idx:idx + 4]
             # Compute Component Parts
-            geo_x_mat = Matrix(4, array("d", [cp.get_x() for cp in cpoints]))
-            geo_y_mat = Matrix(4, array("d", [cp.get_y() for cp in cpoints]))
+            get_x_mat_elements: NDArray[float64] = array([[cp.get_x() for cp in cpoints]], dtype=float64)
+            get_y_mat_elements: NDArray[float64] = array([[cp.get_y() for cp in cpoints]], dtype=float64)
+            geo_x_mat = Matrix(get_x_mat_elements).as_transposed()
+            geo_y_mat = Matrix(get_y_mat_elements).as_transposed()
             # Define Initial Values
             x0, x1, x2, x3 = (STEP_SPLINE_MATRIX * geo_x_mat).columns()[0]
             y0, y1, y2, y3 = (STEP_SPLINE_MATRIX * geo_y_mat).columns()[0]
