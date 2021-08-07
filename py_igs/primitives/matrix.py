@@ -124,7 +124,7 @@ class Vector2(Matrix):
         return Vector2(x, y)
     # Define String
     def __str__(self) -> str:
-        return f"Vector2: [{self.elements[0]}, {self.elements[1]}]"
+        return f"Vector2: [{self.elements[0,0]}, {self.elements[0,1]}]"
     # Define Constructor
     def __init__(self, x: float, y: float) -> None:
         # Call Super Constructor
@@ -169,7 +169,7 @@ class Vector3(Matrix):
         super().__init__(elements)
     # Define String
     def __str__(self) -> str:
-        return f"Vector2: [{self.elements[0]}, {self.elements[1]}, {self.elements[2]}]"
+        return f"Vector3: [{self.elements[0,0]}, {self.elements[0,1]}, {self.elements[0,2]}]"
     # Getters
     def as_tuple(self)-> Tuple[float, float, float]:
         # Destructure Matrix
