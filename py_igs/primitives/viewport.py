@@ -76,7 +76,8 @@ class Viewport:
         if self.window is None:
             raise RuntimeError("Window is None")
         # Translate into Origin
-        to_origin = homo_coords2_matrix_translate(-self.window.x_min, -self.window.y_min)
+        wc_bottom_left = self.window.get_corner_bottom_left()
+        to_origin = homo_coords2_matrix_translate(-wc_bottom_left.get_x(), -wc_bottom_left.get_y())
         # Denormalize 
         # Scale to Match Desired Size
         scale_x = self.get_width() / (self.window.get_width())

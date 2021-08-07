@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from math import acos
+from math import cos, sin
 
 import cairo
 from objects.object_type import ObjectType
@@ -13,12 +13,11 @@ class Window:
     # Initializes the Window
     def __init__(self, x_world_min: float, y_world_min: float, x_world_max: float, y_world_max: float) -> None:
         # Initialize Attributes
-        self.x_min = x_world_min
-        self.y_min = y_world_min
-        self.x_max = x_world_max
-        self.y_max = y_world_max
-        self.vec_up_x = x_world_min + ((x_world_max - x_world_min) / 2)
-        self.vec_up_y = y_world_max
+        self.theta = 0
+        self.width = x_world_max - x_world_min
+        self.height = y_world_max - y_world_min
+        self.center_x = x_world_min + (self.width / 2)
+        self.center_y = y_world_min + (self.height / 2)
         # Define Clip Methods
         self.cliping_methods = {
             ObjectType.POINT_2D: EClippingMethod.POINT_CLIP,
@@ -31,71 +30,31 @@ class Window:
         self.show_stats = False
     # Define Getters and Setters
     def get_width(self) -> float:
-        current_theta = self.get_vec_up_theta()
-        (center_x, center_y) = self.get_center().as_tuple()
-
-        translate_center = homo_coords2_matrix_translate(-center_x, -center_y)
-        remove_rotate = homo_coords2_matrix_rotate(-current_theta)
-        translate_back = homo_coords2_matrix_translate(center_x, center_y)
-        
-        max_point = Vector2(self.x_max, self.y_max).as_vec3(1)
-        max_point *= translate_center * remove_rotate * translate_back
-        return abs(max_point.try_into_vec2().get_x() - center_x) * 2
+        return self.width
     def get_inverse_width(self) -> float:
         return 1 / self.get_width()
     def set_width(self, width: float) -> None:
-        scale_width = width / self.get_width()
-        self.scale(scale_width, 1)
-
+        self.width = width
     def get_height(self) -> float:
-        current_theta = self.get_vec_up_theta()
-        (center_x, center_y) = self.get_center().as_tuple()
-
-        translate_center = homo_coords2_matrix_translate(-center_x, -center_y)
-        remove_rotate = homo_coords2_matrix_rotate(-current_theta)
-        translate_back = homo_coords2_matrix_translate(center_x, center_y)
-        
-        max_point = Vector2(self.x_max, self.y_max).as_vec3(1)
-        max_point *= translate_center * remove_rotate * translate_back
-        return (max_point.try_into_vec2().get_y() - center_y) * 2
+        return self.height
 
     def get_inverse_height(self) -> float:
         return 1 / self.get_height()
     def set_height(self, height: float) -> None:
-        scale_height = height / self.get_height()
-        self.scale(1, scale_height)
+        self.height = height
 
     def get_center(self) -> Vector2:
-        # Compute Centers
-        min_point = Vector2(self.x_min, self.y_min)
-        max_point = Vector2(self.x_max, self.y_max)
         # Return as Vector
-        return ((min_point + max_point) * 0.5).try_into_vec2()
+        return Vector2(self.center_x, self.center_y)
 
     def get_vec_up(self) -> Vector2:
-        return Vector2(self.vec_up_x, self.vec_up_y)
+        vec_up_x = self.center_x + (self.width  / 2) * sin(-self.theta)
+        vec_up_y = self.center_y + (self.height / 2) * cos(self.theta)
+        return Vector2(vec_up_x, vec_up_y)
 
     def get_vec_up_theta(self) -> float:
-        # Get Vectors
-        (center_x, center_y) = self.get_center().as_tuple()
-        # Get Abs Vup and Vup
-        (vup_x, vup_y) = self.get_vec_up().as_tuple()
-        # Translate to Center
-        vector_up = Vector2(vup_x - center_x, vup_y - center_y)
-        abs_vec_up = Vector2(0, vector_up.modulo())
-        # Compute Triangles Sides
-        is_negative_x = vector_up.get_x() > 0
-        # Check 0 Degrees
-        if vector_up == abs_vec_up:
-            return 0
-        # Compute Angle Between Vectors
-        value = (vector_up.dot_product(abs_vec_up) / (vector_up.modulo() * abs_vec_up.modulo()))
-        value = max(min(value, 1), -1)
-        theta = acos(value)
-        # Check Negative Value
-        theta *= -1 if is_negative_x else 1
         # Return Angle
-        return theta
+        return self.theta
     # Define Transformations
     def pan(self, dx: float = 0, dy: float = 0):
         # Compute Delta Vectors
@@ -107,49 +66,18 @@ class Window:
         # Cast as Vector 2
         vector_delta = vector_delta.try_into_vec2()
         # Update Data
-        self.x_min += vector_delta.get_x()
-        self.x_max += vector_delta.get_x()
-        self.y_min += vector_delta.get_y()
-        self.y_max += vector_delta.get_y()
-        self.vec_up_x += vector_delta.get_x()
-        self.vec_up_y += vector_delta.get_y()
+        self.center_x += vector_delta.get_x()
+        self.center_y += vector_delta.get_y()
 
     def scale(self, scale_factor_x: float = 1, scale_factor_y: float = 1):
-        # Compute Window point as vectors
-        (center_x, center_y) = self.get_center().as_tuple()
-        left_bottom = Vector2(self.x_min, self.y_min)
-        right_upper = Vector2(self.x_max, self.y_max)
-        vector_up = self.get_vec_up()
-        # Translate into origin
-        translate_origin = homo_coords2_matrix_translate(-center_x, -center_y)
-        # Scale
-        scale_by_factor = homo_coords2_matrix_scale(scale_factor_x, scale_factor_y)
-        # Translate back
-        translate_back = homo_coords2_matrix_translate(center_x, center_y)
-        # Compute Transforms
-        grouped_transform = translate_origin * scale_by_factor * translate_back
-
-        left_bottom = left_bottom.as_vec3(1) * grouped_transform
-        right_upper = right_upper.as_vec3(1) * grouped_transform
-        vector_up = vector_up.as_vec3(1) * grouped_transform
-        # Destructure Values
-        (x_min, y_min) = left_bottom.try_into_vec2().as_tuple()
-        (x_max, y_max) = right_upper.try_into_vec2().as_tuple()
-        (x_vup, y_vup) = vector_up.try_into_vec2().as_tuple()
-        # Update Data
-        self.x_min = x_min
-        self.x_max = x_max
-        self.y_min = y_min
-        self.y_max = y_max
-        self.vec_up_x = x_vup
-        self.vec_up_y = y_vup
+        # Scale Width and Height
+        self.width *= scale_factor_x
+        self.height *= scale_factor_y
 
     def rotate(self, theta_in_radians: float = 0):
         # Compute Window Points as Vectors
-        (center_x, center_y) = self.get_center().as_tuple()
-        left_bottom = Vector2(self.x_min, self.y_min)
-        right_upper = Vector2(self.x_max, self.y_max)
-        vector_up = self.get_vec_up()
+        center = self.get_center()
+        (center_x, center_y) = center.as_tuple()
         # Translate into origin
         translate_origin = homo_coords2_matrix_translate(-center_x, -center_y)
         # Perform Rotation
@@ -158,20 +86,18 @@ class Window:
         translate_back = homo_coords2_matrix_translate(center_x, center_y)
         # Compute Transforms
         grouped_transform = translate_origin * rotate_theta * translate_back
-        left_bottom = left_bottom.as_vec3(1) * grouped_transform
-        right_upper = right_upper.as_vec3(1) * grouped_transform
-        vector_up = vector_up.as_vec3(1) * grouped_transform
+        center = center.as_vec3(1) * grouped_transform
         # Destructure Values
-        (x_min, y_min) = left_bottom.try_into_vec2().as_tuple()
-        (x_max, y_max) = right_upper.try_into_vec2().as_tuple()
-        (x_vup, y_vup) = vector_up.try_into_vec2().as_tuple()
+        (x_center, y_center) = center.try_into_vec2().as_tuple()
         # Update Data
-        self.x_min = x_min
-        self.x_max = x_max
-        self.y_min = y_min
-        self.y_max = y_max
-        self.vec_up_x = x_vup
-        self.vec_up_y = y_vup
+        self.x_center = x_center
+        self.y_center = y_center
+
+    # Define Corners
+    def get_corner_bottom_left(self) -> Vector2:
+        rotation = homo_coords2_matrix_rotate(self.theta)
+        corner_bl = Vector2(self.center_x - (self.width / 2), self.center_y - (self.height / 2))
+        return (corner_bl * rotation).try_into_vec2()
 
     # Define Normalized World Coordinates System
     def as_normalized_coordinates_transform(self):
