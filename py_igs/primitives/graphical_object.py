@@ -14,6 +14,8 @@ class GraphicalObject(ABC):
         super().__init__()
         # Define Color Attributes
         self.color = (1,1,1,1)
+        # Define Dimensions Attributes
+        self.projected: bool = False
         # Define Pipeline Attributes
         self.in_pipeline = False
     # Define Interface

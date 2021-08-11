@@ -1,23 +1,25 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from math import cos, sin
 
 import cairo
 from objects.object_type import ObjectType
 from primitives.clipping_method import EClippingMethod
 from time import perf_counter_ns
-from primitives.matrix import Matrix, Vector2, homo_coords2_matrix_rotate, homo_coords2_matrix_scale, homo_coords2_matrix_translate
+from primitives.matrix import Matrix, Vector2, Vector3, homo_coords2_matrix_rotate, homo_coords2_matrix_scale, homo_coords2_matrix_translate, homo_coords3_matrix_rotate_xyz, homo_coords3_matrix_translate
 if TYPE_CHECKING:
     from primitives.display_file import DisplayFile
 class Window:
     # Initializes the Window
-    def __init__(self, x_world_min: float, y_world_min: float, x_world_max: float, y_world_max: float) -> None:
+    def __init__(self, x_world_min: float, y_world_min: float, x_world_max: float, y_world_max: float, z_pos: float = 0) -> None:
         # Initialize Attributes
-        self.theta = 0
+        self.theta_x = 0
+        self.theta_y = 0
+        self.theta_z = 0
         self.width = x_world_max - x_world_min
         self.height = y_world_max - y_world_min
         self.center_x = x_world_min + (self.width / 2)
         self.center_y = y_world_min + (self.height / 2)
+        self.center_z = z_pos
         # Define Clip Methods
         self.cliping_methods = {
             ObjectType.POINT_2D: EClippingMethod.POINT_CLIP,
@@ -27,7 +29,7 @@ class Window:
             ObjectType.BSPLINE_2D: EClippingMethod.LINE_LIANG_BARSKY
         }
         # Define Statistics
-        self.show_stats = False
+        self.show_stats = True
     # Define Getters and Setters
     def get_width(self) -> float:
         return self.width
@@ -43,18 +45,36 @@ class Window:
     def set_height(self, height: float) -> None:
         self.height = height
 
-    def get_center(self) -> Vector2:
+    def get_center(self) -> Vector3:
         # Return as Vector
-        return Vector2(self.center_x, self.center_y)
+        return Vector3(self.center_x, self.center_y, self.center_z)
 
-    def get_vec_up(self) -> Vector2:
-        vec_up_x = self.center_x + (self.width  / 2) * sin(-self.theta)
-        vec_up_y = self.center_y + (self.height / 2) * cos(self.theta)
-        return Vector2(vec_up_x, vec_up_y)
+    def get_vec_up(self) -> Vector3:
+        # Get Initial Vec Up Vector
+        vec_up = Vector3(0, self.height / 2, 0)
+        # Rotate Vector to Match Standard
+        rotate = homo_coords3_matrix_rotate_xyz(self.theta_x, self.theta_y, self.theta_z)
+        # Move to Window Center
+        move_center = homo_coords3_matrix_translate(self.center_x, self.center_y, self.center_z)
+        return (vec_up.as_vec4(1) * rotate * move_center).try_into_vec3()
 
     def get_vec_up_theta(self) -> float:
         # Return Angle
-        return self.theta
+        return self.theta_z
+
+    def get_vec_normal(self) -> Vector3:
+        # Get Initial Normal Vector
+        vec_normal = Vector3(0, 0, -1)
+        # Rotate Vector to Match Standard
+        rotate = homo_coords3_matrix_rotate_xyz(self.theta_x, self.theta_y, self.theta_z)
+        # Move to Window Center
+        move_center = homo_coords3_matrix_translate(self.center_x, self.center_y, self.center_z)
+        return (vec_normal.as_vec4(1) * rotate * move_center).try_into_vec3()
+
+    def get_projection_ref_center(self) -> Vector3:
+        # Currently is equal to window center
+        return self.get_center()
+
     # Define Transformations
     def pan(self, dx: float = 0, dy: float = 0):
         # Compute Delta Vectors
@@ -76,11 +96,11 @@ class Window:
 
     def rotate(self, theta_in_radians: float = 0):
         # Update Value
-        self.theta += theta_in_radians
+        self.theta_z += theta_in_radians
 
     # Define Corners
     def get_corner_bottom_left(self) -> Vector2:
-        rotation = homo_coords2_matrix_rotate(self.theta)
+        rotation = homo_coords2_matrix_rotate(self.theta_z)
         corner_bl = Vector2(self.center_x - (self.width / 2), self.center_y - (self.height / 2))
         return (corner_bl * rotation).try_into_vec2()
 
@@ -88,7 +108,7 @@ class Window:
     def as_normalized_coordinates_transform(self):
         # Define World Center
         world_center = self.get_center()
-        (center_x, center_y) = world_center.as_tuple()
+        (center_x, center_y, _) = world_center.as_tuple()
         # Translate World Center to Origin
         translate_origin = homo_coords2_matrix_translate(-center_x, -center_y)
         # Define theta
@@ -100,9 +120,25 @@ class Window:
         # Return as Transform
         return translate_origin * rotate_minus_theta * normalize_scale
 
+    def as_parallel_projection_transform(self): 
+        # Define VRP - View Reference Poin
+        vrp_center = self.get_projection_ref_center()
+        (center_x, center_y, center_z) = vrp_center.as_tuple()
+        # Translate VRP to Origin
+        translate_origin = homo_coords3_matrix_translate(-center_x, -center_y, -center_z)
+        # Define Thetas
+        theta_x = self.theta_x
+        theta_y = self.theta_y
+        # Rotate World
+        rotate_minus_theta = homo_coords3_matrix_rotate_xyz(-theta_x, -theta_y, 0)
+        # Return as Transform
+        return translate_origin * rotate_minus_theta
+
     # Define Rendering
     def draw(self, cairo: cairo.Context, display_file: DisplayFile, viewport_transform: Matrix) -> None:
         comp_norm_time = 0
+        comp_proj_time = 0
+        proj_time = 0
         norm_time = 0
         clip_time = 0
         draw_time = 0
@@ -110,13 +146,22 @@ class Window:
         time = perf_counter_ns()
         normalize = self.as_normalized_coordinates_transform()
         comp_norm_time = perf_counter_ns() - time
+        # Compute 3D Porjection for the Window
+        time = perf_counter_ns()
+        project = self.as_parallel_projection_transform()
+        comp_proj_time = perf_counter_ns() - time
         # Draw Display File Objects
         render_all = perf_counter_ns()
         for drawable_object in display_file.get_drawable_objects():
             # Draw Object - Start Pipeline
             time = perf_counter_ns()
             drawable_object.pipeline()
+            # 3D Transform
+            if drawable_object.projected: 
+                drawable_object.transform(project)
+            proj_time += perf_counter_ns() - time
             # Normalize - World -> Generic Window
+            time = perf_counter_ns()
             drawable_object.transform(normalize)
             norm_time += perf_counter_ns() - time
             time = perf_counter_ns()
@@ -142,8 +187,10 @@ class Window:
         render_all = perf_counter_ns() - render_all
         if self.show_stats:
             print("------------------------------")
-            print(f"Normal Mat Time:   \t{(comp_norm_time/1000000):.3f} ms")
-            print(f"Normalization Time:\t{(norm_time/1000000):.3f} ms")
-            print(f"Clipping Time:     \t{(clip_time/1000000):.3f} ms")
-            print(f"Draw Time:         \t{(draw_time/1000000):.3f} ms")
-            print(f"Frame Time:        \t{(render_all/1000000):.3f} ms")
+            print(f"Normal Mat Time:   \t{(comp_norm_time/1000000):07.3f} ms")
+            print(f"Project Mat Time:  \t{(comp_proj_time/1000000):07.3f} ms")
+            print(f"Projection Time:   \t{(proj_time/1000000):07.3f} ms")
+            print(f"Normalization Time:\t{(norm_time/1000000):07.3f} ms")
+            print(f"Clipping Time:     \t{(clip_time/1000000):07.3f} ms")
+            print(f"Draw Time:         \t{(draw_time/1000000):07.3f} ms")
+            print(f"Frame Time:        \t{(render_all/1000000):07.3f} ms")

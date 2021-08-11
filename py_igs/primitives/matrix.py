@@ -9,6 +9,7 @@ from math import cos, sin, sqrt
 # Use Numpy + Numba to Speed Up Calculations ===================================
 from numba import jit #type: ignore
 from numpy import float64, array, identity
+from numpy.linalg import inv, multi_dot
 from numpy.typing import NDArray
 
 @jit(nopython=True, nogil=True, cache=True, fastmath=True) #type: ignore
@@ -90,6 +91,10 @@ class Matrix:
         else:
             return False
 
+    def as_inverse(self) -> Matrix:
+        data: NDArray[float64] = inv(self.elements)
+        return Matrix(data)
+
     def as_transposed(self) -> Matrix:
         # Create new Matrix and return it
         return Matrix(self.elements.transpose())
@@ -112,6 +117,15 @@ class Matrix:
         x, y, z, *_ = self.lines()[0]
         # Cast Matrix
         return Vector3(x, y, z)
+    def try_into_vec4(self) -> Vector4:
+        # Check Dimensions
+        (lines_n, columns_n) = self.dimensions()
+        if lines_n != 1 or columns_n < 4:
+            raise ValueError(f"Cannot cast {self} as a Vector2")
+        # Get Values
+        x, y, z, w, *_ = self.lines()[0]
+        # Cast Matrix
+        return Vector4(x, y, z, w)
 
 # Define Fixed Size Matrices
 class Vector2(Matrix):
@@ -158,6 +172,11 @@ class Vector2(Matrix):
         x, y = self.as_tuple()
         # Transform into Vector
         return Vector3(x, y, z)
+    def as_vec4(self, z: float = 0, w: float = 0) -> Vector4:
+        # Destructure Matrix
+        x, y = self.as_tuple()
+        # Transform into Vector
+        return Vector4(x, y, z, w)
     def modulo(self) -> float:
         return sqrt(sum(el**2 for el in self.lines()[0]))
 
@@ -197,6 +216,55 @@ class Vector3(Matrix):
         (x2, y2, z2) = other.as_tuple()
         # Make OP
         return (x1 * x2) + (y1 * y2) + (z1 * z2)
+    def as_vec4(self, w: float = 0) -> Vector4:
+        # Destructure Matrix
+        x, y, z = self.as_tuple()
+        # Transform into Vector
+        return Vector4(x, y, z, w)
+    def modulo(self) -> float:
+        return sqrt(sum(el**2 for el in self.lines()[0]))
+
+class Vector4(Matrix):
+    # Define Constructor
+    def __init__(self, x: float, y: float, z: float, w: float) -> None:
+        # Call Super Constructor
+        elements: NDArray[float64] = array([[x, y, z, w]], dtype=float64)
+        super().__init__(elements)
+    # Define String
+    def __str__(self) -> str:
+        return f"Vector4: [{self.elements[0,0]}, {self.elements[0,1]}, {self.elements[0,2]}, {self.elements[0,3]}]"
+    # Getters
+    def as_tuple(self)-> Tuple[float, float, float, float]:
+        # Destructure Matrix
+        x, y, z, w = self.lines()[0]
+        # Return as Tuple
+        return (x, y, z, w)
+    def get_x(self) -> float:
+        # Destructure Matrix
+        x = self.lines()[0][0]
+        # Return value
+        return x
+    def get_y(self) -> float:
+        # Destructure Matrix
+        y = self.lines()[0][1]
+        # Return value
+        return y
+    def get_z(self) -> float:
+        # Destructure Matrix
+        z = self.lines()[0][2]
+        # Return value
+        return z
+    def get_w(self) -> float:
+        # Destructure Matrix
+        w = self.lines()[0][2]
+        # Return value
+        return w
+    def dot_product(self, other: Vector4) -> float:
+        # Destructure Values
+        (x1, y1, z1, w1) = self.as_tuple()
+        (x2, y2, z2, w2) = other.as_tuple()
+        # Make OP
+        return (x1 * x2) + (y1 * y2) + (z1 * z2) + (w1 * w2)
     def modulo(self) -> float:
         return sqrt(sum(el**2 for el in self.lines()[0]))
 
@@ -225,3 +293,72 @@ def homo_coords2_matrix_rotate(theta: float) -> Matrix:
     # Define and Return Matrix
     elements: NDArray[float64] = array([[cos(theta), sin(theta), 0], [-sin(theta), cos(theta), 0], [0, 0, 1]])
     return Matrix(elements) 
+
+# Define 3D Homogeneus Transformation Matrices
+def homo_coords3_matrix_identity() -> Matrix:
+    return gen_identity_matrix(4)
+
+
+def homo_coords3_matrix_translate(dx: float, dy: float, dz: float) -> Matrix:
+    # Define and Return Matrix
+    elements: NDArray[float64] = array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [dx, dy, dz, 1]], dtype=float64)
+    return Matrix(elements)
+
+def homo_coords3_matrix_scale(sx: float, sy: float, sz: float) -> Matrix:
+    # Define and Return Matrix
+    elements: NDArray[float64] = array([[sx, 0, 0, 0], [0, sy, 0, 0], [0, 0, sz, 0], [0, 0, 0, 1]], dtype=float64)
+    return Matrix(elements)
+
+def homo_coords3_matrix_rotate_x(theta: float) -> Matrix:
+    # Define and Return Matrix
+    elements: NDArray[float64] = array([
+        [1,          0,          0, 0],
+        [0, cos(theta), sin(theta), 0],
+        [0,-sin(theta), cos(theta), 0],
+        [0,          0,          0, 1]
+    ])
+    return Matrix(elements) 
+
+def homo_coords3_matrix_rotate_y(theta: float) -> Matrix:
+    # Define and Return Matrix
+    elements: NDArray[float64] = array([
+        [ cos(theta), 0,-sin(theta), 0],
+        [          0, 1,          0, 0],
+        [ sin(theta), 0, cos(theta), 0],
+        [          0, 0,          0, 1]
+    ])
+    return Matrix(elements) 
+
+def homo_coords3_matrix_rotate_z(theta: float) -> Matrix:
+    # Define and Return Matrix
+    elements: NDArray[float64] = array([
+        [ cos(theta), sin(theta), 0, 0],
+        [-sin(theta), cos(theta), 0, 0],
+        [          0,          0, 1, 0],
+        [          0,          0, 0, 1]
+    ])
+    return Matrix(elements) 
+
+def homo_coords3_matrix_rotate_xyz(theta_x: float, theta_y: float, theta_z: float) -> Matrix:
+    # Define and Return Matrix
+    rotate_x: NDArray[float64] = array([
+        [1,            0,            0, 0],
+        [0, cos(theta_x), sin(theta_x), 0],
+        [0,-sin(theta_x), cos(theta_x), 0],
+        [0,            0,            0, 1]
+    ])
+    rotate_y: NDArray[float64] = array([
+        [ cos(theta_y), 0,-sin(theta_y), 0],
+        [            0, 1,            0, 0],
+        [ sin(theta_y), 0, cos(theta_y), 0],
+        [            0, 0,            0, 1]
+    ])
+    rotate_z: NDArray[float64] = array([
+        [ cos(theta_z), sin(theta_z), 0, 0],
+        [-sin(theta_z), cos(theta_z), 0, 0],
+        [          0,          0, 1, 0],
+        [          0,          0, 0, 1]
+    ])
+    # Multiply
+    rotation: NDArray[float64] = multi_dot([rotate_x, rotate_y, rotate_z])
+    return Matrix(rotation)
