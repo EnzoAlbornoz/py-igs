@@ -57,6 +57,8 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     widget_objects_tree: Any = Gtk.Template.Child("widget-objects-view")
     widget_objects_actions_remove: Any = Gtk.Template.Child("widget-objects-actions-remove")
     widget_objects_actions_edit: Any = Gtk.Template.Child("widget-objects-actions-edit")
+    widget_nav_btn_move_front: Any = Gtk.Template.Child("nav-btn-move-front")
+    widget_nav_btn_move_back: Any = Gtk.Template.Child("nav-btn-move-back")
     # Define Dialogs
     dialog_object_add: Any = Gtk.Template.Child("window-object-add")
     dialog_object_add_object_name: Any = Gtk.Template.Child("window-object-add-name-entry")
@@ -192,6 +194,32 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         self.console_log(f"[Viewport] Resized to {self.viewport.get_width()}x{self.viewport.get_height()}")
     
     # Pan Handlers
+    @Gtk.Template.Callback("on-btn-clicked-move-front")
+    def on_btn_clicked_move_front(self, _button):
+        # Check Viewport and Window
+        if self.viewport is None or self.viewport.window is None:
+            return
+        # Get Pan Step
+        pan_step = self.g_nav_adjustment_pan.get_value()
+        # Pan Window Front
+        self.viewport.window.move(0, 0, pan_step)
+        # Log
+        self.console_log(f"[Navigation] Moved {pan_step} to front")
+        # Force Redraw
+        self.widget_canvas.queue_draw()
+    @Gtk.Template.Callback("on-btn-clicked-move-back")
+    def on_btn_clicked_move_back(self, _button):
+        # Check Viewport and Window
+        if self.viewport is None or self.viewport.window is None:
+            return
+        # Get Pan Step
+        pan_step = self.g_nav_adjustment_pan.get_value()
+        # Pan Window Back
+        self.viewport.window.move(0, 0, -pan_step)
+        # Log
+        self.console_log(f"[Navigation] Moved {pan_step} to back")
+        # Force Redraw
+        self.widget_canvas.queue_draw()
     @Gtk.Template.Callback("on-btn-clicked-move-up")
     def on_btn_clicked_move_up(self, _button):
         # Check Viewport and Window
@@ -224,14 +252,14 @@ class ApplicationWindow(Gtk.ApplicationWindow):
             # Rotate To Right
             self.viewport.window.rotate_vertical(radians(-rotation_step))
             # Log
-            self.console_log(f"[Navigation] Looked {-rotation_step} to bottom")
+            self.console_log(f"[Navigation] Looked {rotation_step} to bottom")
         else:
             # Get Pan Step
             pan_step = self.g_nav_adjustment_pan.get_value()
             # Pan Window Right
             self.viewport.window.pan(0, -pan_step)
             # Log
-            self.console_log(f"[Navigation] Moved {-pan_step} to bottom")
+            self.console_log(f"[Navigation] Moved {pan_step} to bottom")
         # Force Redraw
         self.widget_canvas.queue_draw()
     @Gtk.Template.Callback("on-btn-clicked-move-left")
@@ -245,14 +273,14 @@ class ApplicationWindow(Gtk.ApplicationWindow):
             # Rotate To Right
             self.viewport.window.rotate_horizontal(radians(-rotation_step))
             # Log
-            self.console_log(f"[Navigation] Looked {-rotation_step} to left")
+            self.console_log(f"[Navigation] Looked {rotation_step} to left")
         else:
             # Get Pan Step
             pan_step = self.g_nav_adjustment_pan.get_value()
             # Pan Window Right
             self.viewport.window.pan(-pan_step, 0)
             # Log
-            self.console_log(f"[Navigation] Moved {-pan_step} to left")
+            self.console_log(f"[Navigation] Moved {pan_step} to left")
         # Force Redraw
         self.widget_canvas.queue_draw()
     @Gtk.Template.Callback("on-btn-clicked-move-right")
@@ -351,8 +379,11 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     @Gtk.Template.Callback("on-btn-change-dimensions")
     def on_btn_change_dimensions(self, button):
         # Update Values
-        button.set_label("2D" if self.is_third_dimension else "3D")
         self.is_third_dimension = not self.is_third_dimension
+        # Update Side Effects
+        button.set_label("3D" if self.is_third_dimension else "2D")
+        self.widget_nav_btn_move_front.set_sensitive(self.is_third_dimension)
+        self.widget_nav_btn_move_back.set_sensitive(self.is_third_dimension)
 
     # Drag Handlers  
     @Gtk.Template.Callback("on-canvas-drag-start")

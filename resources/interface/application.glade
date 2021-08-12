@@ -496,6 +496,7 @@ Gabriel Soares Flores
                             <property name="sensitive">False</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <signal name="clicked" handler="on-btn-clicked-move-front" swapped="no"/>
                           </object>
                           <packing>
                             <property name="left_attach">3</property>
@@ -510,6 +511,7 @@ Gabriel Soares Flores
                             <property name="sensitive">False</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <signal name="clicked" handler="on-btn-clicked-move-back" swapped="no"/>
                           </object>
                           <packing>
                             <property name="left_attach">2</property>
