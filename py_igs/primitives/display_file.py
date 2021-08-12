@@ -1,9 +1,11 @@
 from __future__ import annotations
 from typing import Dict, List, TYPE_CHECKING, Tuple
 from objects.bezier_2d import Bezier2D
+from objects.line_3d import Line3D
 # from objects.line_2d import Line2D
 from objects.wireframe_2d import Wireframe2D
-from primitives.matrix import Matrix, Vector2
+from objects.wireframe_3d import Wireframe3D
+from primitives.matrix import Matrix, Vector2, Vector3
 if TYPE_CHECKING:
     from primitives.graphical_object import GraphicalObject
     from objects.object_type import ObjectType
@@ -14,9 +16,9 @@ class DisplayFile:
         self.objects: Dict[str, Tuple[ObjectType, GraphicalObject]] = {}
         for (object_name, object_type, object_ref) in objects:
             self.objects[object_name] = (object_type, object_ref)
-        self.add_object("test", Wireframe2D(Vector2(0,0), Vector2(50, 100), Vector2(100, 100), Vector2(150, 0)))
+        self.add_object("test", Wireframe3D(Vector3(0,0,0), Vector3(50, 100,0), Vector3(100, 100,0), Vector3(150, 0,0)))
         self.add_object("test2", Bezier2D(0.01, Vector2(0,0), Vector2(50, 100), Vector2(100, 100), Vector2(150, 0), Vector2(300, 300)))
-        # self.add_object("testl", Line2D(Vector2(0,0), Vector2(100,100)))
+        self.add_object("testl", Line3D(Vector3(0,0, 0), Vector3(100,100, 0)))
     # Define Methods
     def get_names(self) -> List[str]:
         # Destructure List

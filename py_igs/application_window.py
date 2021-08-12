@@ -131,6 +131,8 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         self.scene_file_name = None
         self.material_file_name = None
         self.scene_save_step = None
+        # Dimension Config
+        self.is_third_dimension = False
     # Define Sync Functions
     def sync_object_tree(self):
         # Clear Object Store
@@ -195,53 +197,85 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         # Check Viewport and Window
         if self.viewport is None or self.viewport.window is None:
             return
-        # Get Pan Step
-        pan_step = self.g_nav_adjustment_pan.get_value()
-        # Pan Window Up
-        self.viewport.window.pan(0, pan_step)
+        if self.is_third_dimension:
+            # Get Rotation Step
+            rotation_step = self.g_nav_adjustment_rotate.get_value()
+            # Rotate To Right
+            self.viewport.window.rotate_vertical(radians(rotation_step))
+            # Log
+            self.console_log(f"[Navigation] Looked {rotation_step} to top")
+        else:
+            # Get Pan Step
+            pan_step = self.g_nav_adjustment_pan.get_value()
+            # Pan Window Right
+            self.viewport.window.pan(0, pan_step)
+            # Log
+            self.console_log(f"[Navigation] Moved {pan_step} to top")
         # Force Redraw
         self.widget_canvas.queue_draw()
-        # Log
-        self.console_log(f"[Navigation] Moved {pan_step} to top")
     @Gtk.Template.Callback("on-btn-clicked-move-down")
     def on_btn_clicked_move_down(self, _button):
         # Check Viewport and Window
         if self.viewport is None or self.viewport.window is None:
             return
-        # Get Pan Step
-        pan_step = self.g_nav_adjustment_pan.get_value()
-        # Pan Window Down
-        self.viewport.window.pan(0, -pan_step)
+        if self.is_third_dimension:
+            # Get Rotation Step
+            rotation_step = self.g_nav_adjustment_rotate.get_value()
+            # Rotate To Right
+            self.viewport.window.rotate_vertical(radians(-rotation_step))
+            # Log
+            self.console_log(f"[Navigation] Looked {-rotation_step} to bottom")
+        else:
+            # Get Pan Step
+            pan_step = self.g_nav_adjustment_pan.get_value()
+            # Pan Window Right
+            self.viewport.window.pan(0, -pan_step)
+            # Log
+            self.console_log(f"[Navigation] Moved {-pan_step} to bottom")
         # Force Redraw
         self.widget_canvas.queue_draw()
-        # Log
-        self.console_log(f"[Navigation] Moved {pan_step} to bottom")
     @Gtk.Template.Callback("on-btn-clicked-move-left")
     def on_btn_clicked_move_left(self, _button):
         # Check Viewport and Window
         if self.viewport is None or self.viewport.window is None:
             return
-        # Get Pan Step
-        pan_step = self.g_nav_adjustment_pan.get_value()
-        # Pan Window Left
-        self.viewport.window.pan(-pan_step, 0)
+        if self.is_third_dimension:
+            # Get Rotation Step
+            rotation_step = self.g_nav_adjustment_rotate.get_value()
+            # Rotate To Right
+            self.viewport.window.rotate_horizontal(radians(-rotation_step))
+            # Log
+            self.console_log(f"[Navigation] Looked {-rotation_step} to left")
+        else:
+            # Get Pan Step
+            pan_step = self.g_nav_adjustment_pan.get_value()
+            # Pan Window Right
+            self.viewport.window.pan(-pan_step, 0)
+            # Log
+            self.console_log(f"[Navigation] Moved {-pan_step} to left")
         # Force Redraw
         self.widget_canvas.queue_draw()
-        # Log
-        self.console_log(f"[Navigation] Moved {pan_step} to left")
     @Gtk.Template.Callback("on-btn-clicked-move-right")
     def on_btn_clicked_move_right(self, _button):
         # Check Viewport and Window
         if self.viewport is None or self.viewport.window is None:
             return
-        # Get Pan Step
-        pan_step = self.g_nav_adjustment_pan.get_value()
-        # Pan Window Right
-        self.viewport.window.pan(pan_step, 0)
+        if self.is_third_dimension:
+            # Get Rotation Step
+            rotation_step = self.g_nav_adjustment_rotate.get_value()
+            # Rotate To Right
+            self.viewport.window.rotate_horizontal(radians(rotation_step))
+            # Log
+            self.console_log(f"[Navigation] Looked {rotation_step} to right")
+        else:
+            # Get Pan Step
+            pan_step = self.g_nav_adjustment_pan.get_value()
+            # Pan Window Right
+            self.viewport.window.pan(pan_step, 0)
+            # Log
+            self.console_log(f"[Navigation] Moved {pan_step} to right")
         # Force Redraw
         self.widget_canvas.queue_draw()
-        # Log
-        self.console_log(f"[Navigation] Moved {pan_step} to right")
 
     # Zoom Handlers
     @Gtk.Template.Callback("on-btn-clicked-zoom-in")
@@ -314,6 +348,11 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         self.viewport.window.rotate(radians(rotation_value))
         # Force Redraw
         self.widget_canvas.queue_draw()
+    @Gtk.Template.Callback("on-btn-change-dimensions")
+    def on_btn_change_dimensions(self, button):
+        # Update Values
+        button.set_label("2D" if self.is_third_dimension else "3D")
+        self.is_third_dimension = not self.is_third_dimension
 
     # Drag Handlers  
     @Gtk.Template.Callback("on-canvas-drag-start")
@@ -353,12 +392,26 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         if not self.drag_coords is None:
             # Get Event Drag Coords
             drag_coords_event = Vector2(event.x_root, event.y_root)
-            # Get Inverse Scale of Viewport and Window
-            inverse_scale = self.viewport.get_inverse_scale()
-            # Compute Diff
-            (diff_x, diff_y) = ((self.drag_coords - drag_coords_event) * inverse_scale).try_into_vec2().as_tuple()
-            # Update View
-            self.viewport.window.pan(diff_x, -diff_y)
+            # Check if need to use 3D Commands
+            if self.is_third_dimension and self.viewport is not None and self.viewport.window is not None:
+                # Get Window Sizing
+                width = self.viewport.window.get_width()
+                height = self.viewport.window.get_height()
+                # Compute Diff
+                (diff_x, diff_y) = (self.drag_coords - drag_coords_event).try_into_vec2().as_tuple()
+                # Compute Percentage
+                percentage_horizontal = diff_x / height * 180
+                percentage_vertical = diff_y / width * 180
+                # Rotate
+                self.viewport.window.rotate_vertical(radians(percentage_vertical))
+                self.viewport.window.rotate_horizontal(radians(percentage_horizontal))
+            else:
+                # Get Inverse Scale of Viewport and Window
+                inverse_scale = self.viewport.get_inverse_scale()
+                # Compute Diff
+                (diff_x, diff_y) = ((self.drag_coords - drag_coords_event) * inverse_scale).try_into_vec2().as_tuple()
+                # Update View
+                self.viewport.window.pan(diff_x, -diff_y)
             # Update Drag Coords
             self.drag_coords = drag_coords_event
             # Force Redraw

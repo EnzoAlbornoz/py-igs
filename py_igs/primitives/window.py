@@ -5,6 +5,7 @@ import cairo
 from objects.object_type import ObjectType
 from primitives.clipping_method import EClippingMethod
 from time import perf_counter_ns
+from primitives.graphical_object import is_projected
 from primitives.matrix import Matrix, Vector2, Vector3, homo_coords2_matrix_rotate, homo_coords2_matrix_scale, homo_coords2_matrix_translate, homo_coords3_matrix_rotate_xyz, homo_coords3_matrix_translate
 if TYPE_CHECKING:
     from primitives.display_file import DisplayFile
@@ -98,6 +99,26 @@ class Window:
         # Update Value
         self.theta_z += theta_in_radians
 
+    def move(self, dx: float, dy: float, dz: float):
+        # Compute Delta Vectors
+        vector_delta = Vector3(dx, dy, dz).as_vec4(1)
+        # Rotate Delta Vector
+        vector_delta *= homo_coords3_matrix_rotate_xyz(self.theta_x, self.theta_y, self.theta_z)
+        # Cast as Vector 2
+        vector_delta = vector_delta.try_into_vec3()
+        # Update Data
+        self.center_x += vector_delta.get_x()
+        self.center_y += vector_delta.get_y()
+        self.center_z += vector_delta.get_z()
+    
+    def rotate_vertical(self,  theta_in_radians: float = 0):
+        # Update Value
+        self.theta_x += theta_in_radians
+
+    def rotate_horizontal(self,  theta_in_radians: float = 0):
+        # Update Value
+        self.theta_y += theta_in_radians
+
     # Define Corners
     def get_corner_bottom_left(self) -> Vector2:
         rotation = homo_coords2_matrix_rotate(self.theta_z)
@@ -157,8 +178,8 @@ class Window:
             time = perf_counter_ns()
             drawable_object.pipeline()
             # 3D Transform
-            if drawable_object.projected: 
-                drawable_object.transform(project)
+            if is_projected(drawable_object): 
+                drawable_object = drawable_object.project(project)
             proj_time += perf_counter_ns() - time
             # Normalize - World -> Generic Window
             time = perf_counter_ns()

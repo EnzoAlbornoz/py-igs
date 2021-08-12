@@ -1,6 +1,9 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Tuple
 from abc import ABC, abstractmethod
+from typing_extensions import TypeGuard
+
+from primitives.matrix import Vector3
 if TYPE_CHECKING:
     from primitives.clipping_method import EClippingMethod
     from objects.object_type import ObjectType
@@ -52,3 +55,26 @@ class GraphicalObject(ABC):
     @abstractmethod
     def clip(self, method: EClippingMethod) -> GraphicalObject | None:
         raise NotImplementedError("GraphicalObject is an abstract class.")
+
+class Graphical3DObject(GraphicalObject):
+    def __init__(self) -> None:
+        # Call Super Constructor
+        super().__init__()
+        # Define Dimensions Attributes
+        self.projected: bool = True
+    @abstractmethod
+    def project(self, projection_matrix: Matrix) -> GraphicalObject:
+        raise NotImplementedError("Graphical3DObject is an abstract class.")
+    @abstractmethod
+    def get_center_coords3(self) -> Vector3:
+        raise NotImplementedError("Graphical3DObject is an abstract class.")
+    def get_center_coords(self) -> Vector2:
+        return self.get_center_coords3().try_into_vec2()
+    # Cannot Render 3D Objects without projecting it
+    def draw(self, cairo: Context) -> None:
+        raise NotImplementedError("Cannot Render Graphical3DObject without projecting it")
+    def clip(self, method: EClippingMethod) -> GraphicalObject | None:
+        raise NotImplementedError("Cannot Render Graphical3DObject without projecting it")
+
+def is_projected(val: GraphicalObject) -> TypeGuard[Graphical3DObject]:
+    return val.projected

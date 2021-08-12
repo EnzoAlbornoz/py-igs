@@ -551,9 +551,9 @@ Gabriel Soares Flores
                           <object class="GtkButton" id="nav-btn-change-dimensions">
                             <property name="label" translatable="yes">2D</property>
                             <property name="visible">True</property>
-                            <property name="sensitive">False</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <signal name="clicked" handler="on-btn-change-dimensions" swapped="no"/>
                           </object>
                           <packing>
                             <property name="left_attach">0</property>
@@ -1902,6 +1902,14 @@ Gabriel Soares Flores</property>
       <column type="gchararray"/>
     </columns>
   </object>
+  <object class="GtkAdjustment" id="g-window-object-edit-translate-adjustment-x">
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="g-window-object-edit-translate-adjustment-y">
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
   <object class="GtkDialog" id="window-object-edit">
     <property name="width_request">460</property>
     <property name="can_focus">False</property>
@@ -2572,14 +2580,6 @@ Gabriel Soares Flores</property>
         </child>
       </object>
     </child>
-  </object>
-  <object class="GtkAdjustment" id="g-window-object-edit-translate-adjustment-x">
-    <property name="step_increment">1</property>
-    <property name="page_increment">10</property>
-  </object>
-  <object class="GtkAdjustment" id="g-window-object-edit-translate-adjustment-y">
-    <property name="step_increment">1</property>
-    <property name="page_increment">10</property>
   </object>
   <object class="GtkFileFilter" id="window-scene-file-filter">
     <mime-types>
