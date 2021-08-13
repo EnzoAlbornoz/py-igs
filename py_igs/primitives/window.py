@@ -6,7 +6,7 @@ from objects.object_type import ObjectType
 from primitives.clipping_method import EClippingMethod
 from time import perf_counter_ns
 from primitives.graphical_object import is_projected
-from primitives.matrix import Matrix, Vector2, Vector3, homo_coords2_matrix_rotate, homo_coords2_matrix_scale, homo_coords2_matrix_translate, homo_coords3_matrix_rotate_xyz, homo_coords3_matrix_translate
+from primitives.matrix import Matrix, Vector2, Vector3, Vector4, homo_coords2_matrix_rotate, homo_coords2_matrix_scale, homo_coords2_matrix_translate, homo_coords3_matrix_rotate_x, homo_coords3_matrix_rotate_xyz, homo_coords3_matrix_rotate_y, homo_coords3_matrix_rotate_z, homo_coords3_matrix_translate
 if TYPE_CHECKING:
     from primitives.display_file import DisplayFile
 class Window:
@@ -30,7 +30,7 @@ class Window:
             ObjectType.BSPLINE_2D: EClippingMethod.LINE_LIANG_BARSKY
         }
         # Define Statistics
-        self.show_stats = True
+        self.show_stats = False
     # Define Getters and Setters
     def get_width(self) -> float:
         return self.width
@@ -49,6 +49,11 @@ class Window:
     def get_center(self) -> Vector3:
         # Return as Vector
         return Vector3(self.center_x, self.center_y, self.center_z)
+    
+    def set_center(self, center: Vector3) -> None:
+        self.center_x = center.get_x()
+        self.center_y = center.get_y()
+        self.center_z = center.get_z()
 
     def get_vec_up(self) -> Vector3:
         # Get Initial Vec Up Vector
@@ -118,6 +123,24 @@ class Window:
     def rotate_horizontal(self,  theta_in_radians: float = 0):
         # Update Value
         self.theta_y += theta_in_radians
+
+    def rotate_x(self, tx: float = 0):
+        #  Define Desired Rotation
+        rotation_vec = Vector4(tx, 0, 0, 1)
+        # Move to Origin
+        rotation_vec *= homo_coords3_matrix_translate(-self.center_x, -self.center_y, -self.center_z)
+        # Rotate
+        rotation_vec *= homo_coords3_matrix_rotate_x(-self.theta_x)
+        rotation_vec *= homo_coords3_matrix_rotate_z(-self.theta_z)
+        rotation_vec *= homo_coords3_matrix_rotate_y(self.theta_y)
+        rotation_vec *= homo_coords3_matrix_rotate_x(self.theta_x)
+        rotation_vec *= homo_coords3_matrix_rotate_z(self.theta_z)
+        # Cast Vector
+        (theta_x, theta_y, theta_z) = rotation_vec.try_into_vec3().as_tuple()
+        # Update Values
+        self.theta_x += theta_x
+        self.theta_y += theta_y
+        self.theta_z += theta_z
 
     # Define Corners
     def get_corner_bottom_left(self) -> Vector2:

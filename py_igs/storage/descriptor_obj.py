@@ -8,14 +8,15 @@ from objects.bezier_2d import Bezier2D
 from objects.point_2d import Point2D
 from objects.line_2d import Line2D
 from objects.wireframe_2d import Wireframe2D
+from objects.wireframe_3d import Wireframe3D
 from primitives.display_file import DisplayFile
 from primitives.graphical_object import GraphicalObject
-from primitives.matrix import Vector2
+from primitives.matrix import Vector2, Vector3
 from primitives.window import Window
 # Declare Class
 class DescriptorOBJ:
     # Define Constructor
-    def __init__(self, objects: Dict[str, GraphicalObject], window_config: Tuple[Vector2, int, int]) -> None:
+    def __init__(self, objects: Dict[str, GraphicalObject], window_config: Tuple[Vector3, int, int]) -> None:
         # Destructure Params
         (window_center, window_width, window_height) = window_config
         # Attributes
@@ -39,7 +40,7 @@ class DescriptorOBJ:
         current_object: str | None = None
         objects: Dict[str, GraphicalObject] = dict()
         # Define Window Config
-        window_center: Vector2 = Vector2(0, 0)
+        window_center: Vector3 = Vector3(0, 0, 0)
         window_width: int = default_width
         window_height: int = default_height
         is_normalized = False
@@ -133,14 +134,15 @@ class DescriptorOBJ:
                     # Load Vertices
                     vectors = [vertices_positions[v_idx - 1] for v_idx in vectors]
                     vectors = [
-                        Vector2(
+                        Vector3(
                             (vx * (0.5 * window_width if is_normalized else 1)) + window_center.get_x(),
-                            (vy * (0.5 * window_height if is_normalized else 1)) + window_center.get_y()
+                            (vy * (0.5 * window_height if is_normalized else 1)) + window_center.get_y(),
+                            (vz * (0.5 * window_height if is_normalized else 1)) + window_center.get_z()
                         )
-                        for (vx, vy, *_) in vectors
+                        for (vx, vy, vz) in vectors
                     ]
                     # Define Triangle
-                    triangle = Wireframe2D(*vectors)
+                    triangle = Wireframe3D(*vectors)
                     # Fill Faces
                     triangle.set_filled(fill_faces)
                     # Check Color
@@ -193,10 +195,10 @@ class DescriptorOBJ:
                     # Parse Data
                     vi_center, vi_dims = [int(values[idx]) for idx in range(2)]
                     # Load From Vectors
-                    (vc_x, vc_y, *_) = vertices_positions[vi_center - 1]
+                    (vc_x, vc_y, vc_z, *_) = vertices_positions[vi_center - 1]
                     (v_w, v_h, *_) = vertices_positions[vi_dims - 1]
                     # Update Data
-                    window_center = Vector2(vc_x, vc_y)
+                    window_center = Vector3(vc_x, vc_y, vc_z)
                     window_width = int(v_w)
                     window_height = int(v_h)
                     # is_normalized = True
@@ -246,14 +248,18 @@ class DescriptorOBJ:
         window_center = window.get_center()
         window_width = window.get_width()
         window_height = window.get_height()
+        window_vup = window.get_vec_up()
+        window_vpn = window.get_vec_normal()
         # Define Lists
-        vertices: List[Vector2] = []
+        vertices: List[Vector3] = []
         object_lines: List[str] = []
         materials: List[str] = []
         # Define Window
         vertices.append(window_center)
-        vertices.append(Vector2(window_width, window_height))
-        window_settings = "w 1 2"
+        vertices.append(Vector3(window_width, window_height, 1))
+        vertices.append(window_vpn)
+        vertices.append(window_vup)
+        window_settings = "w 1 2 3 4"
         # Define Material Import
         object_file_path = Path(file_name_obj)
         material_file_path = Path(file_name_mtl)
@@ -267,7 +273,7 @@ class DescriptorOBJ:
                 points = [object_graphics.pipeline_point]
                 vertex_idxs: List[int] = []
                 for point in points:
-                    vertices.append(point)
+                    vertices.append(point.as_vec3(1))
                     vertex_idx = len(vertices)
                     vertex_idxs.append(vertex_idx)
                 # Declare Materials
@@ -287,7 +293,7 @@ class DescriptorOBJ:
                 points = [object_graphics.pipeline_point_a, object_graphics.pipeline_point_b]
                 vertex_idxs: List[int] = []
                 for point in points:
-                    vertices.append(point)
+                    vertices.append(point.as_vec3(1))
                     vertex_idx = len(vertices)
                     vertex_idxs.append(vertex_idx)
                 # Declare Materials
@@ -307,7 +313,7 @@ class DescriptorOBJ:
                 points = object_graphics.control_points
                 vertex_idxs: List[int] = []
                 for point in points:
-                    vertices.append(point)
+                    vertices.append(point.as_vec3(1))
                     vertex_idx = len(vertices)
                     vertex_idxs.append(vertex_idx)
                 # Declare Materials
@@ -328,7 +334,7 @@ class DescriptorOBJ:
                 points = object_graphics.control_points
                 vertex_idxs: List[int] = []
                 for point in points:
-                    vertices.append(point)
+                    vertices.append(point.as_vec3(1))
                     vertex_idx = len(vertices)
                     vertex_idxs.append(vertex_idx)
                 # Declare Materials
@@ -350,7 +356,7 @@ class DescriptorOBJ:
                 is_triangle = len(points) == 3
                 vertex_idxs: List[int] = []
                 for point in points:
-                    vertices.append(point)
+                    vertices.append(point.as_vec3(1))
                     vertex_idx = len(vertices)
                     vertex_idxs.append(vertex_idx)
                 # Declare Materials

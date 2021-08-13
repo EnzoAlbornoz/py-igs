@@ -3,7 +3,6 @@ from typing import Dict, List, TYPE_CHECKING, Tuple
 from objects.bezier_2d import Bezier2D
 from objects.line_3d import Line3D
 # from objects.line_2d import Line2D
-from objects.wireframe_2d import Wireframe2D
 from objects.wireframe_3d import Wireframe3D
 from primitives.matrix import Matrix, Vector2, Vector3
 if TYPE_CHECKING:

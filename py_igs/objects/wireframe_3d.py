@@ -49,7 +49,8 @@ class Wireframe3D(Graphical3DObject):
         # Project Points
         points = [(point.as_vec4(1) * projection_matrix).try_into_vec2() for point in points]
         # Return new Wireframe
-        return Wireframe2D(*points)
+        wireframe = Wireframe2D(*points, color=self.color, filled=self.filled)
+        return wireframe
 
     def transform(self, transformation: Matrix):
         # Transform points

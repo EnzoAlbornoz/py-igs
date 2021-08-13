@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, Tuple
 from objects.object_type import ObjectType
 from primitives.clipping_method import EClippingMethod, weiler_atherton_w_cs_clip_poly, weiler_atherton_w_lb_clip_poly
 from primitives.graphical_object import GraphicalObject
@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 class Wireframe2D(GraphicalObject):
     # Define Constructor
-    def __init__(self, *points: Vector2) -> None:
+    def __init__(self, *points: Vector2, filled: bool = False, color: Tuple[float, float, float, float] = (1, 1, 1, 1)) -> None:
         # Call Super Constructor
         super().__init__()
         # Check Points Length
@@ -20,7 +20,8 @@ class Wireframe2D(GraphicalObject):
         # Define Pipeline Attributes
         self.pipeline_points = list(points)
         # Define Fill Options
-        self.filled = False
+        self.filled = filled
+        self.color = color
     def __str__(self) -> str:
         desc = "Wireframe2D\n"
         for point in (self.pipeline_points if self.in_pipeline else self.points):

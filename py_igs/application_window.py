@@ -425,14 +425,13 @@ class ApplicationWindow(Gtk.ApplicationWindow):
             drag_coords_event = Vector2(event.x_root, event.y_root)
             # Check if need to use 3D Commands
             if self.is_third_dimension and self.viewport is not None and self.viewport.window is not None:
-                # Get Window Sizing
-                width = self.viewport.window.get_width()
-                height = self.viewport.window.get_height()
                 # Compute Diff
                 (diff_x, diff_y) = (self.drag_coords - drag_coords_event).try_into_vec2().as_tuple()
+                # Define Sensitivity
+                MOUSE_SENSITIVITY = 15
                 # Compute Percentage
-                percentage_horizontal = diff_x / height * 180
-                percentage_vertical = diff_y / width * 180
+                percentage_horizontal = diff_x / 180 * MOUSE_SENSITIVITY
+                percentage_vertical = diff_y / 180 * MOUSE_SENSITIVITY
                 # Rotate
                 self.viewport.window.rotate_vertical(radians(percentage_vertical))
                 self.viewport.window.rotate_horizontal(radians(percentage_horizontal))
@@ -991,16 +990,13 @@ class ApplicationWindow(Gtk.ApplicationWindow):
             # Clear Display File
             self.display_file.clear()
             # Get Window Info
-            (wc_x, wc_y) = scene_descriptor.window_center.as_tuple()
+            window_center = scene_descriptor.window_center
             window_width = scene_descriptor.window_width
             window_height = scene_descriptor.window_height
             # Update Window Data
-            self.viewport.window.x_min = wc_x - (window_width / 2)
-            self.viewport.window.x_max = wc_x + (window_width / 2)
-            self.viewport.window.y_min = wc_y - (window_height / 2)
-            self.viewport.window.y_max = wc_y + (window_height / 2)
-            self.viewport.window.vec_up_x = wc_x
-            self.viewport.window.vec_up_y = wc_y + (window_height / 2)
+            self.viewport.window.set_width(window_width)
+            self.viewport.window.set_height(window_height)
+            self.viewport.window.set_center(window_center)
             # Log 
             self.console_log(f"[Window] New Dimensions: {self.viewport.window.get_width()} x {self.viewport.window.get_height()}")
             # Add Files to Display File
