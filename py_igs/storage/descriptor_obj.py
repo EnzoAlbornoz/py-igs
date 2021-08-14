@@ -1,10 +1,11 @@
 # Import Dependencies
 from __future__ import annotations
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, cast
 from pathlib import Path
 from objects.bspline_2d import BSpline2D
 from objects.bezier_2d import Bezier2D
+from objects.object_3d import Object3D
 from objects.point_2d import Point2D
 from objects.line_2d import Line2D
 from objects.wireframe_2d import Wireframe2D
@@ -152,7 +153,12 @@ class DescriptorOBJ:
                         triangle.set_color((*material_kd_rgb, 1))
                     # Add Triangle to Objects
                     if current_object is None:
-                        objects[f"loaded_object_{len(objects)}"] = triangle
+                        if "loaded_object" in objects.keys():
+                            cast(Object3D, objects["loaded_object"]).wireframes.append(triangle)
+                        else:
+                            objects["loaded_object"] = Object3D(triangle)
+                    elif isinstance(objects[current_object], Object3D):
+                        cast(Object3D, objects[current_object]).wireframes.append(triangle)
                     else:
                         objects[current_object] = triangle
                 elif line.startswith("p "):

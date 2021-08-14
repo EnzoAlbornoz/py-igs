@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING, cast
 from objects.object_type import ObjectType
 from objects.wireframe_2d import Wireframe2D
 from primitives.clipping_method import EClippingMethod
@@ -14,7 +14,8 @@ class Object2D(GraphicalObject):
         # Call Super Constructor
         super().__init__()
         # Define Attributes
-        self.wireframes: List[Tuple[bool, Wireframe2D]] = [(True, wireframe) for wireframe in wireframes]
+        self.wireframes = list(wireframes)
+        self.pipeline_wireframes = self.wireframes
     def __str__(self) -> str:
         desc = "Object2D\n"
         for wireframe in self.wireframes:
@@ -25,43 +26,40 @@ class Object2D(GraphicalObject):
     def get_type() -> ObjectType:
         return ObjectType.OBJECT_2D
     # Define Pipeline Methods
+    def __get_wireframes(self):
+        return self.pipeline_wireframes if self.in_pipeline else self.wireframes
+        
     def pipeline(self):
         # Reset Pipeline wireframes
-        for idx in range(len(self.wireframes)):
-            _, wireframe = self.wireframes[idx]
-            wireframe.pipeline()
-            self.wireframes[idx] = (True, wireframe)
+        self.pipeline_wireframes = self.wireframes
     def pipeline_apply(self):
-        for _, wireframe in self.wireframes:
-            wireframe.pipeline_apply()
-    def pipeline_abort(self):
-        for idx in range(len(self.wireframes)):
-            _, wireframe = self.wireframes[idx]
-            wireframe.pipeline_abort()
-            self.wireframes[idx] = (True, wireframe)
+        self.wireframes = self.wireframes
     # Filled Methods
     def set_filled(self, fill: bool) -> None:
-        for _, wireframe in self.wireframes:
+        for wireframe in self.__get_wireframes():
             wireframe.set_filled(fill)
     # Define Methods
     def draw(self, cairo: Context):
-        for clipped, wireframe in self.wireframes:
-            if not clipped:
-                wireframe.draw(cairo)
+        for wireframe in self.__get_wireframes():
+            wireframe.draw(cairo)
     
     def transform(self, transformation: Matrix):
-        for _, wireframe in self.wireframes:
+        for wireframe in self.__get_wireframes():
             wireframe.transform(transformation)
         # Return Chain
         return self
 
     def get_center_coords(self) -> Vector2:
         # Get wireframes
-        wireframes_center_coords = [wireframe.get_center_coords() for _, wireframe in self.wireframes]
+        wireframes_center_coords = [wireframe.get_center_coords() for wireframe in self.__get_wireframes()]
         wireframes_center = sum(wireframes_center_coords, Vector2(0, 0))
         # Compute Average
         return (wireframes_center * (1 / len(wireframes_center_coords))).try_into_vec2()
 
     def clip(self, method: EClippingMethod) -> GraphicalObject | None:
-        self.wireframes = [(wireframe.clip(method) is None, wireframe) for _, wireframe in self.wireframes]
+        points = [cast(Wireframe2D, clipped_wf) for wf in self.wireframes if (clipped_wf := wf.clip(method)) is not None]
+        if self.in_pipeline:
+            self.pipeline_wireframes = points
+        else:
+            self.wireframes = points
         return self
