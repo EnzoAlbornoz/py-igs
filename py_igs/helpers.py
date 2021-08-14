@@ -10,7 +10,7 @@ import gi
 from typing import Any, Iterable, List, Tuple, TypeVar
 from ast import literal_eval
 from itertools import zip_longest
-from primitives.matrix import Vector2
+from primitives.matrix import Vector2, Vector3
 # Setup Graphic
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
@@ -29,11 +29,33 @@ def extract_points_as_vec2_from_box(container_box: Any) -> List[Vector2]:
     # Return Vectors
     return vec_points
 
+def extract_points_as_vec3_from_box(container_box: Any) -> List[Vector3]:
+    # Get Points
+    points: List[List[float]] = [
+        [
+            point_box_item.get_value()
+            for point_box_item in point_box if isinstance(point_box_item, Gtk.SpinButton)
+        ]
+        for point_box in container_box
+    ]
+    # Map Points as Vectors
+    vec_points = [Vector3(point_x, point_y, point_z) for [point_x, point_y, point_z] in points]
+    # Return Vectors
+    return vec_points
+
 def parse_text_into_points_2d(text: str) -> List[Vector2]:
     # Parse Tuple List
     point_tuples = literal_eval(text)
     # Transform to Vectors
     points = [Vector2(x, y) for (x, y, *_) in point_tuples]
+    # Return List
+    return points
+
+def parse_text_into_points_3d(text: str) -> List[Vector3]:
+    # Parse Tuple List
+    point_tuples = literal_eval(text)
+    # Transform to Vectors
+    points = [Vector3(x, y, more[0] if len(more) > 0 else 0) for (x, y, *more) in point_tuples]
     # Return List
     return points
 

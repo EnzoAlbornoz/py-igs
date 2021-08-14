@@ -1108,6 +1108,32 @@ Gabriel Soares Flores</property>
                                 <property name="position">3</property>
                               </packing>
                             </child>
+                            <child>
+                              <object class="GtkLabel" id="window-object-add-point-at-z-label">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="label" translatable="yes">Z :</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">4</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkSpinButton" id="window-object-add-point-at-z-value">
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="text" translatable="yes">0</property>
+                                <property name="climb_rate">1</property>
+                                <property name="numeric">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">True</property>
+                                <property name="fill">True</property>
+                                <property name="position">5</property>
+                              </packing>
+                            </child>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -1218,6 +1244,33 @@ Gabriel Soares Flores</property>
                                 <property name="position">3</property>
                               </packing>
                             </child>
+                            <child>
+                              <object class="GtkLabel" id="window-object-add-line-from-z-label">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="label" translatable="yes">Z :</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">4</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkSpinButton" id="window-object-add-line-from-z-value">
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="text" translatable="yes">0</property>
+                                <property name="input_purpose">number</property>
+                                <property name="climb_rate">1</property>
+                                <property name="numeric">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">True</property>
+                                <property name="fill">True</property>
+                                <property name="position">5</property>
+                              </packing>
+                            </child>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -1246,6 +1299,7 @@ Gabriel Soares Flores</property>
                               <object class="GtkSpinButton" id="window-object-add-line-to-x-value">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
+                                <property name="text" translatable="yes">0</property>
                                 <property name="input_purpose">number</property>
                                 <property name="climb_rate">1</property>
                                 <property name="numeric">True</property>
@@ -1281,6 +1335,33 @@ Gabriel Soares Flores</property>
                                 <property name="expand">True</property>
                                 <property name="fill">True</property>
                                 <property name="position">3</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="window-object-add-line-to-z-label">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="label" translatable="yes">Z :</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">4</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkSpinButton" id="window-object-add-line-to-z-value">
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="text" translatable="yes">0</property>
+                                <property name="input_purpose">number</property>
+                                <property name="climb_rate">1</property>
+                                <property name="numeric">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">True</property>
+                                <property name="fill">True</property>
+                                <property name="position">5</property>
                               </packing>
                             </child>
                           </object>
@@ -1416,6 +1497,33 @@ Gabriel Soares Flores</property>
                                             <property name="position">3</property>
                                           </packing>
                                         </child>
+                                        <child>
+                                          <object class="GtkLabel" id="window-object-add-wireframe-coords-label-z-vertex1">
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">False</property>
+                                            <property name="label" translatable="yes">Z :</property>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">False</property>
+                                            <property name="fill">True</property>
+                                            <property name="position">4</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkSpinButton" id="window-object-add-wireframe-coords-value-z-vertex1">
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">True</property>
+                                            <property name="text" translatable="yes">0</property>
+                                            <property name="input_purpose">number</property>
+                                            <property name="climb_rate">1</property>
+                                            <property name="numeric">True</property>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">True</property>
+                                            <property name="fill">True</property>
+                                            <property name="position">5</property>
+                                          </packing>
+                                        </child>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -1482,6 +1590,33 @@ Gabriel Soares Flores</property>
                                             <property name="position">3</property>
                                           </packing>
                                         </child>
+                                        <child>
+                                          <object class="GtkLabel" id="window-object-add-wireframe-coords-label-z-vertex2">
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">False</property>
+                                            <property name="label" translatable="yes">Z :</property>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">False</property>
+                                            <property name="fill">True</property>
+                                            <property name="position">4</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkSpinButton" id="window-object-add-wireframe-coords-value-z-vertex2">
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">True</property>
+                                            <property name="text" translatable="yes">0</property>
+                                            <property name="input_purpose">number</property>
+                                            <property name="climb_rate">1</property>
+                                            <property name="numeric">True</property>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">True</property>
+                                            <property name="fill">True</property>
+                                            <property name="position">5</property>
+                                          </packing>
+                                        </child>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -1546,6 +1681,33 @@ Gabriel Soares Flores</property>
                                             <property name="expand">True</property>
                                             <property name="fill">True</property>
                                             <property name="position">3</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkLabel" id="window-object-add-wireframe-coords-label-z-vertex3">
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">False</property>
+                                            <property name="label" translatable="yes">Z :</property>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">False</property>
+                                            <property name="fill">True</property>
+                                            <property name="position">4</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkSpinButton" id="window-object-add-wireframe-coords-value-z-vertex3">
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">True</property>
+                                            <property name="text" translatable="yes">0</property>
+                                            <property name="input_purpose">number</property>
+                                            <property name="climb_rate">1</property>
+                                            <property name="numeric">True</property>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">True</property>
+                                            <property name="fill">True</property>
+                                            <property name="position">5</property>
                                           </packing>
                                         </child>
                                       </object>

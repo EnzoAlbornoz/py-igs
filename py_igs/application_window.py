@@ -16,12 +16,15 @@ from functools import reduce
 from enum import IntEnum, unique
 from gi.repository import Gtk, Gdk
 from cairo import Context
-from helpers import extract_points_as_vec2_from_box, gdk_rgba_as_tuple, parse_text_into_points_2d
+from helpers import extract_points_as_vec3_from_box, gdk_rgba_as_tuple, parse_text_into_points_2d, parse_text_into_points_3d
 from objects.bspline_2d import BSpline2D
-from objects.line_2d import Line2D
+# from objects.line_2d import Line2D
+from objects.line_3d import Line3D
 from objects.object_type import ObjectType
-from objects.point_2d import Point2D
-from objects.wireframe_2d import Wireframe2D
+# from objects.point_2d import Point2D
+from objects.point_3d import Point3D
+# from objects.wireframe_2d import Wireframe2D
+from objects.wireframe_3d import Wireframe3D
 from objects.bezier_2d import Bezier2D
 from primitives.display_file import DisplayFile
 from primitives.graphical_object import GraphicalObject
@@ -622,37 +625,37 @@ class ApplicationWindow(Gtk.ApplicationWindow):
             # Check Type of Page
             if self.add_object_current_type == DialogObjectType.POINT:
                 # Get Points
-                [point_vec2] = extract_points_as_vec2_from_box(self.dialog_object_add_tab_point_coords)
+                [point_vec3] = extract_points_as_vec3_from_box(self.dialog_object_add_tab_point_coords)
                 # Build Object
-                object_to_build = Point2D(point_vec2)
+                object_to_build = Point3D(point_vec3)
             elif self.add_object_current_type == DialogObjectType.LINE:
                 # Get Points
-                [point_from, point_to] = extract_points_as_vec2_from_box(self.dialog_object_add_tab_line_coords)
+                [point_from, point_to] = extract_points_as_vec3_from_box(self.dialog_object_add_tab_line_coords)
                 # Build Object
-                object_to_build = Line2D(point_from, point_to)
+                object_to_build = Line3D(point_from, point_to)
             elif self.add_object_current_type == DialogObjectType.WIREFRAME:
                 # Get Points
-                points = extract_points_as_vec2_from_box(self.dialog_object_add_tab_wireframe_coords)
+                points = extract_points_as_vec3_from_box(self.dialog_object_add_tab_wireframe_coords)
                 # Build Object
-                object_to_build = Wireframe2D(*points)
+                object_to_build = Wireframe3D(*points)
                 # Fill If Selected
                 object_to_build.set_filled(self.add_object_filled)
             elif self.add_object_current_type is DialogObjectType.WIREFRAME_TEXT:
                 # Get Text
                 points_text = self.dialog_object_add_tab_text_coords.get_text()
                 # Get Points
-                points = parse_text_into_points_2d(points_text)
+                points = parse_text_into_points_3d(points_text)
                 # Check Object to Build
                 points_len = len(points)
                 if points_len == 1:
                     # Its a Point
-                    object_to_build = Point2D(*points)
+                    object_to_build = Point3D(*points)
                 elif points_len == 2:
                     # Its a Line
-                    object_to_build = Line2D(*points)
+                    object_to_build = Line3D(*points)
                 elif points_len >= 3:
                     # Its a Wireframe
-                    object_to_build = Wireframe2D(*points)
+                    object_to_build = Wireframe3D(*points)
                     # Fill If Selected
                     object_to_build.set_filled(self.add_object_filled)
                 else:
