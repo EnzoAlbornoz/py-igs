@@ -28,7 +28,7 @@ class Window:
             ObjectType.WIREFRAME_2D: EClippingMethod.POLY_WEILER_ATHERTON_WITH_LB,
             ObjectType.BEZIER_2D: EClippingMethod.LINE_LIANG_BARSKY,
             ObjectType.BSPLINE_2D: EClippingMethod.LINE_LIANG_BARSKY,
-            ObjectType.OBJECT_2D: EClippingMethod.LINE_LIANG_BARSKY
+            ObjectType.OBJECT_2D: EClippingMethod.POLY_WEILER_ATHERTON_WITH_LB,
         }
         # Define Statistics
         self.show_stats = False

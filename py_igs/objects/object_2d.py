@@ -28,7 +28,7 @@ class Object2D(GraphicalObject):
     # Define Pipeline Methods
     def __get_wireframes(self):
         return self.pipeline_wireframes if self.in_pipeline else self.wireframes
-        
+
     def pipeline(self):
         # Reset Pipeline wireframes
         self.pipeline_wireframes = self.wireframes

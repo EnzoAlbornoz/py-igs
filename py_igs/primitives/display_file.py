@@ -1,10 +1,10 @@
 from __future__ import annotations
 from typing import Dict, List, TYPE_CHECKING, Tuple
-from objects.bezier_2d import Bezier2D
-from objects.line_3d import Line3D
+# from objects.bezier_2d import Bezier2D
+# from objects.line_3d import Line3D
 from objects.object_3d import Object3D
 from objects.wireframe_3d import Wireframe3D
-from primitives.matrix import Matrix, Vector2, Vector3
+from primitives.matrix import Matrix, Vector3
 if TYPE_CHECKING:
     from primitives.graphical_object import GraphicalObject
     from objects.object_type import ObjectType

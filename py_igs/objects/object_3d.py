@@ -44,8 +44,11 @@ class Object3D(Graphical3DObject):
     def project(self, projection_matrix: Matrix) -> GraphicalObject:
         # Project Object
         wireframes = cast(List[Wireframe2D], [wireframe.project(projection_matrix) for wireframe in self.wireframes])
+        object_2d = Object2D(*wireframes)
+        object_2d.pipeline()
         # Return Projected Object
-        return Object2D(*wireframes)
+        return object_2d
+
     def transform(self, transformation: Matrix):
         # Transform wireframes
         for wireframe in self.wireframes:

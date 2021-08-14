@@ -157,10 +157,11 @@ class DescriptorOBJ:
                             cast(Object3D, objects["loaded_object"]).wireframes.append(triangle)
                         else:
                             objects["loaded_object"] = Object3D(triangle)
-                    elif isinstance(objects[current_object], Object3D):
-                        cast(Object3D, objects[current_object]).wireframes.append(triangle)
                     else:
-                        objects[current_object] = triangle
+                        if current_object in objects.keys() and isinstance(objects[current_object], Object3D):
+                            cast(Object3D, objects[current_object]).wireframes.append(triangle)
+                        else:
+                            objects[current_object] = Object3D(triangle)
                 elif line.startswith("p "):
                     # Point
                     # Get Point Data
@@ -375,6 +376,29 @@ class DescriptorOBJ:
                 content.append(f"o {object_name}")
                 content.append(f"usemtl mtl_{object_name.strip()}")
                 content.append(("f" if is_triangle else "l") + " " + " ".join(map(str, vertex_idxs)))
+                # Save Into List
+                object_lines.append("\n".join(content))
+                materials.append("\n".join(material_lines))
+            elif isinstance(object_graphics, Object3D):
+                wf_points = [wf.pipeline_points for wf in object_graphics.wireframes]
+                # Declare Objects
+                content: List[str] = []
+                material_lines: List[str] = []
+                # Stringify Objects
+                content.append(f"o {object_name}")
+                for points in wf_points:
+                    vertex_idxs: List[int] = []
+                    for point in points:
+                        vertices.append(point)
+                        vertex_idx = len(vertices)
+                        vertex_idxs.append(vertex_idx)
+                    # Declare Materials
+                    (kd_r, kd_g, kd_b, *_) = object_graphics.color
+                    material_lines.append(f"newmtl mtl_{object_name.strip()}")
+                    material_lines.append(f"Kd {float(kd_r)} {float(kd_g)} {float(kd_b)}")
+                    # Declare Object
+                    content.append(f"usemtl mtl_{object_name.strip()}")
+                    content.append(("f") + " " + " ".join(map(str, vertex_idxs)))
                 # Save Into List
                 object_lines.append("\n".join(content))
                 materials.append("\n".join(material_lines))

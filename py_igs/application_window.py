@@ -523,6 +523,13 @@ class ApplicationWindow(Gtk.ApplicationWindow):
             if clip_method is EClippingMethod.LINE_LIANG_BARSKY
             else EClippingMethod.NONE
         )
+        self.viewport.window.cliping_methods[ObjectType.OBJECT_2D] = (
+            EClippingMethod.POLY_WEILER_ATHERTON_WITH_CS
+            if clip_method is EClippingMethod.LINE_COHEN_SUTHERLAND
+            else EClippingMethod.POLY_WEILER_ATHERTON_WITH_LB
+            if clip_method is EClippingMethod.LINE_LIANG_BARSKY
+            else EClippingMethod.NONE
+        )
         # Force Redraw
         self.widget_canvas.queue_draw()        
     
