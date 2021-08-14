@@ -7,7 +7,7 @@
 # pyright: reportUntypedClassDecorator=false
 # pyright: reportUntypedFunctionDecorator=false
 # Import Dependencies
-from typing import Any, List
+from typing import Any, List, cast
 import gi
 from math import fmod, radians
 from os import getcwd
@@ -27,8 +27,8 @@ from objects.point_3d import Point3D
 from objects.wireframe_3d import Wireframe3D
 from objects.bezier_2d import Bezier2D
 from primitives.display_file import DisplayFile
-from primitives.graphical_object import GraphicalObject
-from primitives.matrix import Vector2, Matrix, homo_coords2_matrix_identity, homo_coords2_matrix_rotate, homo_coords2_matrix_scale, homo_coords2_matrix_translate
+from primitives.graphical_object import GraphicalObject, is_projected
+from primitives.matrix import Vector2, Matrix, homo_coords2_matrix_identity, homo_coords2_matrix_rotate, homo_coords2_matrix_scale, homo_coords2_matrix_translate, homo_coords3_matrix_identity, homo_coords3_matrix_rotate_x, homo_coords3_matrix_rotate_y, homo_coords3_matrix_rotate_z, homo_coords3_matrix_scale, homo_coords3_matrix_translate
 from primitives.viewport import Viewport
 from primitives.window import Window
 from storage.descriptor_obj import DescriptorOBJ
@@ -79,8 +79,12 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     dialog_object_edit_rotate_around_center: Any = Gtk.Template.Child("window-object-edit-rotate-around-center")
     dialog_object_edit_rotate_around_origin: Any = Gtk.Template.Child("window-object-edit-rotate-around-origin")
     dialog_object_edit_rotate_around_point: Any = Gtk.Template.Child("window-object-edit-rotate-around-point")
+    dialog_object_edit_rotate_axis_x: Any = Gtk.Template.Child("window-object-edit-rotate-axis-x")
+    dialog_object_edit_rotate_axis_y: Any = Gtk.Template.Child("window-object-edit-rotate-axis-y")
+    dialog_object_edit_rotate_axis_z: Any = Gtk.Template.Child("window-object-edit-rotate-axis-z")
     dialog_object_edit_rotate_x_value: Any = Gtk.Template.Child("window-object-edit-rotate-x-value")
     dialog_object_edit_rotate_y_value: Any = Gtk.Template.Child("window-object-edit-rotate-y-value")
+    dialog_object_edit_rotate_z_value: Any = Gtk.Template.Child("window-object-edit-rotate-z-value")
 
     dialog_about: Any = Gtk.Template.Child("window-about")
 
@@ -95,11 +99,14 @@ class ApplicationWindow(Gtk.ApplicationWindow):
 
     g_adj_dialog_edit_translate_x: Any = Gtk.Template.Child("g-window-object-edit-translate-adjustment-x")
     g_adj_dialog_edit_translate_y: Any = Gtk.Template.Child("g-window-object-edit-translate-adjustment-y")
+    g_adj_dialog_edit_translate_z: Any = Gtk.Template.Child("g-window-object-edit-translate-adjustment-z")
     g_adj_dialog_edit_rotate_amount: Any = Gtk.Template.Child("g-window-object-edit-rotate-adjustment-amount")
     g_adj_dialog_edit_rotate_around_x: Any = Gtk.Template.Child("g-window-object-edit-rotate-around-adjustment-x")
     g_adj_dialog_edit_rotate_around_y: Any = Gtk.Template.Child("g-window-object-edit-rotate-around-adjustment-y")
+    g_adj_dialog_edit_rotate_around_z: Any = Gtk.Template.Child("g-window-object-edit-rotate-around-adjustment-z")
     g_adj_dialog_edit_scale_x: Any = Gtk.Template.Child("g-window-object-edit-scale-adjustment-x")
     g_adj_dialog_edit_scale_y: Any = Gtk.Template.Child("g-window-object-edit-scale-adjustment-y")
+    g_adj_dialog_edit_scale_z: Any = Gtk.Template.Child("g-window-object-edit-scale-adjustment-z")
     g_adj_dialog_edit_transform_list: Any = Gtk.Template.Child("g-window-object-edit-transformations-list")
     # Define Constructor
     def __init__(self, *args, **kwargs) -> None:
@@ -138,6 +145,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         self.scene_save_step = None
         # Dimension Config
         self.is_third_dimension = False
+        self.rotation_axis: int = 0
     # Define Sync Functions
     def sync_object_tree(self):
         # Clear Object Store
@@ -713,6 +721,23 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         # Update Control
         self.add_object_filled = is_active
 
+    @Gtk.Template.Callback('on-object-edit-radio-rotate-axis-x-toggled')
+    def on_object_edit_radio_rotate_axis_x_toggled(self, radio_button):
+        # Move rotate point to origin
+        if radio_button.get_active():
+            self.rotation_axis = 0
+
+    @Gtk.Template.Callback('on-object-edit-radio-rotate-axis-y-toggled')
+    def on_object_edit_radio_rotate_axis_y_toggled(self, radio_button):
+        # Move rotate point to origin
+        if radio_button.get_active():
+            self.rotation_axis = 1
+
+    @Gtk.Template.Callback('on-object-edit-radio-rotate-axis-z-toggled')
+    def on_object_edit_radio_rotate_axis_z_toggled(self, radio_button):
+        # Move rotate point to origin
+        if radio_button.get_active():
+            self.rotation_axis = 2
     
     @Gtk.Template.Callback("on-dialog-object-add-btn-add-vertex")
     def on_dialog_object_add_btn_add_vertex(self, _button):
@@ -721,15 +746,19 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         # Create Labels
         vertex_label_x: Any = Gtk.Label.new("X: ")
         vertex_label_y: Any = Gtk.Label.new("Y: ")
+        vertex_label_z: Any = Gtk.Label.new("Z: ")
         # Create Spin Button Adjustments
         spin_adjustment_x: Any = Gtk.Adjustment.new(0, -float_info.max, float_info.max, 1, 10, 0)
         spin_adjustment_y: Any = Gtk.Adjustment.new(0, -float_info.max, float_info.max, 1, 10, 0)
+        spin_adjustment_z: Any = Gtk.Adjustment.new(0, -float_info.max, float_info.max, 1, 10, 0)
         # Create Spin Button
         spin_button_x: Any = Gtk.SpinButton.new(spin_adjustment_x, 1, 0)
         spin_button_y: Any = Gtk.SpinButton.new(spin_adjustment_y, 1, 0)
+        spin_button_z: Any = Gtk.SpinButton.new(spin_adjustment_z, 1, 0)
         # Configure Spins
         spin_button_x.set_numeric(True)
         spin_button_y.set_numeric(True)
+        spin_button_z.set_numeric(True)
         # Add Destroy Button
         def destroy_vertex(_button):
             # Remove From List
@@ -743,6 +772,8 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         vertex_box.pack_start(spin_button_x, True, True, 0)
         vertex_box.pack_start(vertex_label_y, False, True, 0)
         vertex_box.pack_start(spin_button_y, True, True, 0)
+        vertex_box.pack_start(vertex_label_z, False, True, 0)
+        vertex_box.pack_start(spin_button_z, True, True, 0)
         vertex_box.pack_start(destroy_button, False, True, 0)
         # Add Box to Coords
         self.dialog_object_add_tab_wireframe_coords.pack_start(vertex_box, False, True, 0)
@@ -788,11 +819,14 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         # Prepare Fields
         self.g_adj_dialog_edit_translate_x.configure(0, -float_info.max, float_info.max, 1, 10, 0)
         self.g_adj_dialog_edit_translate_y.configure(0, -float_info.max, float_info.max, 1, 10, 0)
+        self.g_adj_dialog_edit_translate_z.configure(0, -float_info.max, float_info.max, 1, 10, 0)
         self.g_adj_dialog_edit_rotate_amount.configure(0, -360, 360, 1, 15, 0)
         self.g_adj_dialog_edit_rotate_around_x.configure(0, -float_info.max, float_info.max, 1, 10, 0)
         self.g_adj_dialog_edit_rotate_around_y.configure(0, -float_info.max, float_info.max, 1, 10, 0)
+        self.g_adj_dialog_edit_rotate_around_z.configure(0, -float_info.max, float_info.max, 1, 10, 0)
         self.g_adj_dialog_edit_scale_x.configure(0, -float_info.max, float_info.max, 1, 10, 0)
         self.g_adj_dialog_edit_scale_y.configure(0, -float_info.max, float_info.max, 1, 10, 0)
+        self.g_adj_dialog_edit_scale_z.configure(0, -float_info.max, float_info.max, 1, 10, 0)
         # Clear Transform List
         self.edit_object_transform_list.clear()
         self.g_adj_dialog_edit_transform_list.clear()
@@ -800,6 +834,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         self.dialog_object_edit_rotate_around_origin.set_active(True)
         self.dialog_object_edit_rotate_x_value.set_sensitive(False)
         self.dialog_object_edit_rotate_y_value.set_sensitive(False)
+        self.dialog_object_edit_rotate_z_value.set_sensitive(False)
         # Show Dialog
         self.dialog_object_edit.show()
 
@@ -809,32 +844,45 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         if not radio_button.get_active():
             self.dialog_object_edit_rotate_x_value.set_sensitive(False)
             self.dialog_object_edit_rotate_y_value.set_sensitive(False)
+            self.dialog_object_edit_rotate_z_value.set_sensitive(False)
         else:
             self.dialog_object_edit_rotate_x_value.set_sensitive(True)
             self.dialog_object_edit_rotate_y_value.set_sensitive(True)
+            self.dialog_object_edit_rotate_z_value.set_sensitive(True)
 
     @Gtk.Template.Callback("on-object-edit-radio-rotate-origin-toggled")
     def on_object_edit_radio_rotate_origin_toggled(self, radio_button):
         # Move rotate point to origin
         if radio_button.get_active():
+            object_ref = self.display_file.get_object_ref(self.selected_object_name)
             self.g_adj_dialog_edit_rotate_around_x.set_value(0)
             self.g_adj_dialog_edit_rotate_around_y.set_value(0)
+            self.g_adj_dialog_edit_rotate_around_z.set_value(0 if is_projected(object_ref) else 1)
 
     @Gtk.Template.Callback("on-object-edit-radio-rotate-center-toggled")
     def on_object_edit_radio_rotate_center_toggled(self, radio_button):
         # Move rotate point to object center
         if radio_button.get_active():
             # Get selected object center
-            object_center = self.display_file.get_object_ref(self.selected_object_name).get_center_coords()
+            object_ref = self.display_file.get_object_ref(self.selected_object_name)
+            object_center = object_ref.get_center_coords3() if is_projected(object_ref) else object_ref.get_center_coords()
             current_center_transform = reduce(
                 lambda acc_trans, it_trans: acc_trans * it_trans,
                 self.edit_object_transform_list,
-                homo_coords2_matrix_identity()
+                homo_coords3_matrix_identity() if is_projected(object_ref) else homo_coords2_matrix_identity()
             )
-            object_center = (object_center.as_vec3(1) * current_center_transform).try_into_vec2()
-            # Define rotate point to the object center
-            self.g_adj_dialog_edit_rotate_around_x.set_value(object_center.get_x())
-            self.g_adj_dialog_edit_rotate_around_y.set_value(object_center.get_y())
+            if is_projected(object_ref):
+                # Define rotate point to the object center
+                object_center = (object_center.as_vec4(1) * current_center_transform).try_into_vec3()
+                self.g_adj_dialog_edit_rotate_around_x.set_value(object_center.get_x())
+                self.g_adj_dialog_edit_rotate_around_y.set_value(object_center.get_y())
+                self.g_adj_dialog_edit_rotate_around_z.set_value(object_center.get_z())
+            else:
+                # Define rotate point to the object center
+                object_center = (cast(Vector2, object_center).as_vec3(1) * current_center_transform).try_into_vec2()
+                self.g_adj_dialog_edit_rotate_around_x.set_value(object_center.get_x())
+                self.g_adj_dialog_edit_rotate_around_y.set_value(object_center.get_y())
+                self.g_adj_dialog_edit_rotate_around_z.set_value(1)
 
     @Gtk.Template.Callback("on-dialog-objects-edit-delete-event")
     def on_dialog_objects_delete_event(self, _dialog, _event):
@@ -862,31 +910,39 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     @Gtk.Template.Callback("on-window-edit-add-translation")
     def on_window_edit_add_translation(self, button):
         # Get Translate Data
+        object_ref = self.display_file.get_object_ref(self.selected_object_name)
         translate_x = self.g_adj_dialog_edit_translate_x.get_value()
         translate_y = self.g_adj_dialog_edit_translate_y.get_value()
+        translate_z = self.g_adj_dialog_edit_translate_z.get_value()
         # Add item into to GUI
         self.g_adj_dialog_edit_transform_list.append([
-            f"Translate [X: {translate_x}] [Y: {translate_y}]"
+            f"Translate [X: {translate_x}] [Y: {translate_y}] [Z: {translate_z}]"
         ])
         # Ignore if no translation
-        if translate_x == 0 and translate_y == 0:
+        if translate_x == 0 and translate_y == 0 and translate_z == 0:
             return
         # Define Transform
-        transform_matrix = homo_coords2_matrix_translate(translate_x, translate_y)
+        transform_matrix = (
+            homo_coords3_matrix_translate(translate_x, translate_y, translate_z)
+                if is_projected(object_ref) else
+            homo_coords2_matrix_translate(translate_x, translate_y)
+        )
         # Apply Transform
         self.edit_object_transform_list.append(transform_matrix)
         # Log
-        self.console_log(f"[Edit] Translated {self.selected_object_name} by {translate_x} units in X and {translate_y} units in Y")
+        self.console_log(f"[Edit] Translated {self.selected_object_name} by {translate_x} units in X and {translate_y} units in Y and {translate_y} units in Z")
     @Gtk.Template.Callback("on-window-edit-add-rotation")
     def on_window_edit_add_rotation(self, _button):
         # Get Rotation Data
+        object_ref = self.display_file.get_object_ref(self.selected_object_name)
         rotate_degrees = self.g_adj_dialog_edit_rotate_amount.get_value()
         rotate_degrees = fmod(rotate_degrees, 360)
         rotate_point_x = self.g_adj_dialog_edit_rotate_around_x.get_value()
         rotate_point_y = self.g_adj_dialog_edit_rotate_around_y.get_value()
+        rotate_point_z = self.g_adj_dialog_edit_rotate_around_z.get_value()
         # Add item into to GUI
         self.g_adj_dialog_edit_transform_list.append([
-            f"Rotate [θ: {rotate_degrees}°] [O: ({rotate_point_x},{rotate_point_y})]"
+            f"Rotate [θ: {rotate_degrees}°] [O: ({rotate_point_x},{rotate_point_y}, {rotate_point_z})]"
         ])
         # Ignore if no rotation
         if rotate_degrees == 0:
@@ -894,42 +950,68 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         # Define Transform
         rotation_radians = radians(rotate_degrees)
         # Compute Rotation
-        rotation_matrix = homo_coords2_matrix_translate(-rotate_point_x, -rotate_point_y)
-        rotation_matrix *= homo_coords2_matrix_rotate(rotation_radians)
-        rotation_matrix *= homo_coords2_matrix_translate(rotate_point_x, rotate_point_y)
+        rotation_matrix: Matrix = None
+        if is_projected(object_ref):
+            rotation_matrix = homo_coords3_matrix_translate(-rotate_point_x, -rotate_point_y, -rotate_point_z)
+            rotation_matrix *= (
+                homo_coords3_matrix_rotate_x(rotation_radians)
+                    if self.rotation_axis == 0 else
+                homo_coords3_matrix_rotate_y(rotation_radians)
+                    if self.rotation_axis == 1 else
+                homo_coords3_matrix_rotate_z(rotation_radians)
+            )
+            rotation_matrix *= homo_coords2_matrix_translate(rotate_point_x, rotate_point_y)
+        else:
+            rotation_matrix = homo_coords2_matrix_translate(-rotate_point_x, -rotate_point_y)
+            rotation_matrix *= homo_coords2_matrix_rotate(rotation_radians)
+            rotation_matrix *= homo_coords2_matrix_translate(rotate_point_x, rotate_point_y)
         # Append Rotation
         self.edit_object_transform_list.append(rotation_matrix)
         # Log
-        self.console_log(f"[Edit] Rotated {self.selected_object_name} by {rotate_degrees} around [{rotate_point_x}, {rotate_point_y}]")
+        self.console_log(f"[Edit] Rotated {self.selected_object_name} by {rotate_degrees} around [{rotate_point_x}, {rotate_point_y}, {rotate_point_z}]")
     @Gtk.Template.Callback("on-window-edit-add-scaling")
     def on_window_edit_add_scaling(self, _button):
         # Get Scaling Data
         scale_x = self.g_adj_dialog_edit_scale_x.get_value()
         scale_y = self.g_adj_dialog_edit_scale_y.get_value()
+        scale_z = self.g_adj_dialog_edit_scale_z.get_value()
         # Add item into to GUI
-        self.g_adj_dialog_edit_transform_list.append([f"Scale [X: {scale_x}%] [Y: {scale_y}%]"])
+        self.g_adj_dialog_edit_transform_list.append([f"Scale [X: {scale_x}%] [Y: {scale_y}%] [Z: {scale_z}%]" ])
         # Ignore if no Scalling
-        if scale_x == 0 and scale_y == 0:
+        if scale_x == 0 and scale_y == 0 and scale_z == 0:
             return
         # Define Transform
-        object_center = self.display_file.get_object_ref(self.selected_object_name).get_center_coords().as_vec3(1)
+        object_ref = self.display_file.get_object_ref(self.selected_object_name)
+        object_center = object_ref.get_center_coords3() if is_projected(object_ref) else object_ref.get_center_coords()
         current_center_transform = reduce(
             lambda acc_trans, it_trans: acc_trans * it_trans,
             self.edit_object_transform_list,
-            homo_coords2_matrix_identity()
+            homo_coords3_matrix_identity() if is_projected(object_ref) else homo_coords2_matrix_identity()
         )
         object_center *= current_center_transform
-        (point_x, point_y) = object_center.try_into_vec2().as_tuple()
-        # Compute Scaling
-        scale_x = 1 + (scale_x / 100)
-        scale_y = 1 + (scale_y / 100)
-        scaling_matrix = homo_coords2_matrix_translate(-point_x, -point_y)
-        scaling_matrix *= homo_coords2_matrix_scale(scale_x, scale_y)
-        scaling_matrix *= homo_coords2_matrix_translate(point_x, point_y)
+        scaling_matrix: Matrix = None
+        if is_projected(object_ref):
+            (point_x, point_y, point_z) = object_center.try_into_vec3().as_tuple()
+            # Compute Scaling
+            scale_x = 1 + (scale_x / 100)
+            scale_y = 1 + (scale_y / 100)
+            scale_z = 1 + (scale_z / 100)
+            
+            scaling_matrix = homo_coords3_matrix_translate(-point_x, -point_y, -point_z)
+            scaling_matrix *= homo_coords3_matrix_scale(scale_x, scale_y,  scale_z)
+            scaling_matrix *= homo_coords3_matrix_translate(point_x, point_y, point_z)
+        else:
+            (point_x, point_y) = object_center.try_into_vec2().as_tuple()
+            # Compute Scaling
+            scale_x = 1 + (scale_x / 100)
+            scale_y = 1 + (scale_y / 100)
+            scaling_matrix = homo_coords2_matrix_translate(-point_x, -point_y)
+            scaling_matrix *= homo_coords2_matrix_scale(scale_x, scale_y)
+            scaling_matrix *= homo_coords2_matrix_translate(point_x, point_y)
         # Append Scaling
         self.edit_object_transform_list.append(scaling_matrix)
         # Log
-        self.console_log(f"[Edit] Scaled {self.selected_object_name} by {scale_x}% in X and {scale_y}% in Y")
+        self.console_log(f"[Edit] Scaled {self.selected_object_name} by {scale_x}% in X and {scale_y}% in Y and {scale_z}% in Z")
 
     @Gtk.Template.Callback("on-dialog-edit-objects-response")
     def on_dialog_edit_objects_response(self, _dialog, response_id):
@@ -939,10 +1021,11 @@ class ApplicationWindow(Gtk.ApplicationWindow):
             if len(self.edit_object_transform_list) == 0:
                 return
             # Join Transforms
+            object_ref = self.display_file.get_object_ref(self.selected_object_name)
             transforms = reduce(
                 lambda acc_trans, it_trans: acc_trans * it_trans,
                 self.edit_object_transform_list,
-                homo_coords2_matrix_identity()
+                homo_coords3_matrix_identity() if is_projected(object_ref) else homo_coords2_matrix_identity()
             )
             # Make Transform
             self.display_file.transform_object_matrix(self.selected_object_name, transforms)

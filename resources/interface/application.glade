@@ -2052,11 +2052,19 @@ Gabriel Soares Flores</property>
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
+  <object class="GtkAdjustment" id="g-window-object-edit-rotate-around-adjustment-z">
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
   <object class="GtkAdjustment" id="g-window-object-edit-scale-adjustment-x">
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
   <object class="GtkAdjustment" id="g-window-object-edit-scale-adjustment-y">
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="g-window-object-edit-scale-adjustment-z">
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
@@ -2071,6 +2079,10 @@ Gabriel Soares Flores</property>
     <property name="page_increment">10</property>
   </object>
   <object class="GtkAdjustment" id="g-window-object-edit-translate-adjustment-y">
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="g-window-object-edit-translate-adjustment-z">
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
@@ -2223,6 +2235,34 @@ Gabriel Soares Flores</property>
                                     <property name="expand">True</property>
                                     <property name="fill">True</property>
                                     <property name="position">3</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel" id="window-object-edit-translate-z-label">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="label" translatable="yes">Z :</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">4</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkSpinButton" id="window-object-edit-translate-z-value">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="text" translatable="yes">0</property>
+                                    <property name="input_purpose">number</property>
+                                    <property name="adjustment">g-window-object-edit-translate-adjustment-z</property>
+                                    <property name="climb_rate">1</property>
+                                    <property name="numeric">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">True</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">5</property>
                                   </packing>
                                 </child>
                               </object>
@@ -2467,11 +2507,101 @@ Gabriel Soares Flores</property>
                                         <property name="position">3</property>
                                       </packing>
                                     </child>
+                                    <child>
+                                      <object class="GtkLabel" id="window-object-edit-rotate-z-label">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="label" translatable="yes">Z :</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">True</property>
+                                        <property name="position">4</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkSpinButton" id="window-object-edit-rotate-z-value">
+                                        <property name="visible">True</property>
+                                        <property name="sensitive">False</property>
+                                        <property name="can_focus">True</property>
+                                        <property name="text" translatable="yes">0</property>
+                                        <property name="input_purpose">number</property>
+                                        <property name="adjustment">g-window-object-edit-rotate-around-adjustment-z</property>
+                                        <property name="climb_rate">1</property>
+                                        <property name="numeric">True</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">True</property>
+                                        <property name="fill">True</property>
+                                        <property name="position">5</property>
+                                      </packing>
+                                    </child>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
                                     <property name="fill">True</property>
                                     <property name="position">2</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkButtonBox" id="window-object-edit-rotate-axis">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="homogeneous">True</property>
+                                    <property name="layout_style">expand</property>
+                                    <child>
+                                      <object class="GtkRadioButton" id="window-object-edit-rotate-around-axis-x">
+                                        <property name="label" translatable="yes">Around Axis X</property>
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">True</property>
+                                        <property name="receives_default">False</property>
+                                        <property name="draw_indicator">True</property>
+                                        <property name="group">window-object-edit-rotate-around-axis-z</property>
+                                        <signal name="toggled" handler="on-object-edit-radio-rotate-axis-x-toggled" swapped="no"/>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">True</property>
+                                        <property name="fill">True</property>
+                                        <property name="position">1</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkRadioButton" id="window-object-edit-rotate-around-axis-y">
+                                        <property name="label" translatable="yes">Around Axis Y</property>
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">True</property>
+                                        <property name="receives_default">False</property>
+                                        <property name="draw_indicator">True</property>
+                                        <property name="group">window-object-edit-rotate-around-axis-z</property>
+                                        <signal name="toggled" handler="on-object-edit-radio-rotate-axis-y-toggled" swapped="no"/>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">True</property>
+                                        <property name="fill">True</property>
+                                        <property name="position">2</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkRadioButton" id="window-object-edit-rotate-around-axis-z">
+                                        <property name="label" translatable="yes">Around Axis Z</property>
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">True</property>
+                                        <property name="receives_default">False</property>
+                                        <property name="active">True</property>
+                                        <property name="draw_indicator">True</property>
+                                        <signal name="toggled" handler="on-object-edit-radio-rotate-axis-z-toggled" swapped="no"/>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">True</property>
+                                        <property name="fill">True</property>
+                                        <property name="position">2</property>
+                                      </packing>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">3</property>
                                   </packing>
                                 </child>
                               </object>
@@ -2604,6 +2734,34 @@ Gabriel Soares Flores</property>
                                     <property name="expand">True</property>
                                     <property name="fill">True</property>
                                     <property name="position">3</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel" id="window-object-edit-scale-z-label">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="label" translatable="yes">Z (%):  </property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">4</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkSpinButton" id="window-object-edit-scale-z-value">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="text" translatable="yes">0</property>
+                                    <property name="input_purpose">number</property>
+                                    <property name="adjustment">g-window-object-edit-scale-adjustment-z</property>
+                                    <property name="climb_rate">1</property>
+                                    <property name="numeric">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">True</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">5</property>
                                   </packing>
                                 </child>
                               </object>
