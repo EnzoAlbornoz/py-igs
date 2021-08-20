@@ -35,7 +35,7 @@ class Point3D(Graphical3DObject):
     # Define Methods    
     def project(self, projection_matrix: Matrix) -> GraphicalObject:
         point = self.pipeline_point if self.in_pipeline else self.point
-        return Point2D((point.as_vec4(1) * projection_matrix).try_into_vec2())
+        return Point2D((point.as_vec4(1) * projection_matrix).try_into_vec3_homo().try_into_vec2())
 
     def transform(self, transformation: Matrix):
         # Transform Point

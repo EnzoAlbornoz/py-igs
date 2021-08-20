@@ -2,11 +2,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import cairo
+from numpy import array, float64
 from objects.object_type import ObjectType
 from primitives.clipping_method import EClippingMethod
 from time import perf_counter_ns
 from primitives.graphical_object import is_projected
 from primitives.matrix import Matrix, Vector2, Vector3, Vector4, homo_coords2_matrix_rotate, homo_coords2_matrix_scale, homo_coords2_matrix_translate, homo_coords3_matrix_rotate_x, homo_coords3_matrix_rotate_xyz, homo_coords3_matrix_rotate_y, homo_coords3_matrix_rotate_z, homo_coords3_matrix_translate
+from numpy import float64, array
+from numpy.typing import NDArray
 if TYPE_CHECKING:
     from primitives.display_file import DisplayFile
 class Window:
@@ -21,6 +24,7 @@ class Window:
         self.center_x = x_world_min + (self.width / 2)
         self.center_y = y_world_min + (self.height / 2)
         self.center_z = z_pos
+        self.perspective_distance = 0
         # Define Clip Methods
         self.cliping_methods = {
             ObjectType.POINT_2D: EClippingMethod.POINT_CLIP,
@@ -70,17 +74,26 @@ class Window:
         return self.theta_z
 
     def get_vec_normal(self) -> Vector3:
-        # Get Initial Normal Vector
-        vec_normal = Vector3(0, 0, -1)
-        # Rotate Vector to Match Standard
-        rotate = homo_coords3_matrix_rotate_xyz(self.theta_x, self.theta_y, self.theta_z)
-        # Move to Window Center
-        move_center = homo_coords3_matrix_translate(self.center_x, self.center_y, self.center_z)
-        return (vec_normal.as_vec4(1) * rotate * move_center).try_into_vec3()
+        if (self.perspective_distance != 0):
+            # Get Initial Normal Vector
+            vec_normal = Vector3(0, 0, -1)
+            # Rotate Vector to Match Standard
+            rotate = homo_coords3_matrix_rotate_xyz(self.theta_x, self.theta_y, self.theta_z)
+            # Move to Window Center
+            move_center = homo_coords3_matrix_translate(self.center_x, self.center_y, self.center_z)
+            return (vec_normal.as_vec4(1) * rotate * move_center).try_into_vec3()
+        else:
+            return (self.get_center() - self.get_projection_ref_center()).try_into_vec3()
 
     def get_projection_ref_center(self) -> Vector3:
-        # Currently is equal to window center
-        return self.get_center()
+        vec_cop = self.get_center()
+        if (self.perspective_distance != 0):
+            transform = Vector3(0, 0, -self.perspective_distance).as_vec4(1)
+            transform *= homo_coords3_matrix_rotate_xyz(self.theta_x, self.theta_y, self.theta_z)
+            vec_cop = (transform - vec_cop.as_vec4(1)).try_into_vec3()
+            print(vec_cop)
+        return vec_cop
+
 
     # Define Transformations
     def pan(self, dx: float = 0, dy: float = 0):
@@ -117,7 +130,7 @@ class Window:
         self.center_y += vector_delta.get_y()
         self.center_z += vector_delta.get_z()
     
-    def rotate_vertical(self,  theta_in_radians: float = 0):
+    def rotate_vertical(self, theta_in_radians: float = 0):
         # Update Value
         self.theta_x += theta_in_radians
 
@@ -179,6 +192,23 @@ class Window:
         # Return as Transform
         return translate_origin * rotate_minus_theta
 
+    def as_perspective_projection_transform(self):
+        # Define VRP - View Reference Poin
+        vrp_center = self.get_projection_ref_center()
+        (vrp_center_x, vrp_center_y, vrp_center_z) = vrp_center.as_tuple()
+        # Translate VRP to Origin
+        translate_origin = homo_coords3_matrix_translate(-vrp_center_x, -vrp_center_y, -vrp_center_z)
+        # Define Thetas
+        theta_x = self.theta_x
+        theta_y = self.theta_y
+        # Rotate World
+        rotate_minus_theta = homo_coords3_matrix_rotate_xyz(-theta_x, -theta_y, 0)
+        # Intersect Window
+        intersection_array: NDArray[float64] = array([[1,0,0,0],[0,1,0,0], [0,0,1,0], [0,0,1/self.perspective_distance,0]], dtype=float64)
+        intersection = Matrix(intersection_array).as_transposed()
+        # Return as Transform
+        return translate_origin * rotate_minus_theta * intersection
+
     # Define Rendering
     def draw(self, cairo: cairo.Context, display_file: DisplayFile, viewport_transform: Matrix) -> None:
         comp_norm_time = 0
@@ -193,7 +223,7 @@ class Window:
         comp_norm_time = perf_counter_ns() - time
         # Compute 3D Porjection for the Window
         time = perf_counter_ns()
-        project = self.as_parallel_projection_transform()
+        project = self.as_parallel_projection_transform() if self.perspective_distance == 0 else self.as_perspective_projection_transform()
         comp_proj_time = perf_counter_ns() - time
         # Draw Display File Objects
         render_all = perf_counter_ns()

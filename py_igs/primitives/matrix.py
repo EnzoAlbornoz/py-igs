@@ -8,7 +8,7 @@ from math import cos, sin, sqrt
 
 # Use Numpy + Numba to Speed Up Calculations ===================================
 from numba import jit #type: ignore
-from numpy import float64, array, identity
+from numpy import arccos, float64, array, identity
 from numpy.linalg import inv, multi_dot
 from numpy.typing import NDArray
 
@@ -73,7 +73,7 @@ class Matrix:
         return Matrix(__matrix_sub__(self.elements, other.elements))
 
     def __mul__(self, other: int | float | Matrix) -> Matrix:
-        if type(other) is Matrix:
+        if isinstance(other, Matrix):
             # Create new Matrix and return it
             return Matrix(__matrix_multiply__(self.elements, other.elements))
         elif type(other) is float or type(other) is int:
@@ -108,6 +108,15 @@ class Matrix:
         x, y, *_ = self.lines()[0]
         # Cast Matrix
         return Vector2(x, y)
+    def try_into_vec2_homo(self) -> Vector2:
+        # Check Dimensions
+        (lines_n, columns_n) = self.dimensions()
+        if lines_n != 1 or columns_n < 3:
+            raise ValueError(f"Cannot cast {self} as a Vector2")
+        # Get Values
+        x, y, z, *_ = self.lines()[0]
+        # Cast Matrix
+        return Vector2(x/z, y/z)
     def try_into_vec3(self) -> Vector3:
         # Check Dimensions
         (lines_n, columns_n) = self.dimensions()
@@ -117,6 +126,15 @@ class Matrix:
         x, y, z, *_ = self.lines()[0]
         # Cast Matrix
         return Vector3(x, y, z)
+    def try_into_vec3_homo(self) -> Vector3:
+        # Check Dimensions
+        (lines_n, columns_n) = self.dimensions()
+        if lines_n != 1 or columns_n < 4:
+            raise ValueError(f"Cannot cast {self} as a Vector2")
+        # Get Values
+        x, y, z, w, *_ = self.lines()[0]
+        # Cast Matrix
+        return Vector3(x/w, y/w, z/w)
     def try_into_vec4(self) -> Vector4:
         # Check Dimensions
         (lines_n, columns_n) = self.dimensions()
@@ -362,3 +380,6 @@ def homo_coords3_matrix_rotate_xyz(theta_x: float, theta_y: float, theta_z: floa
     # Multiply
     rotation: NDArray[float64] = multi_dot([rotate_x, rotate_y, rotate_z])
     return Matrix(rotation)
+
+def angle_between_vectors(vector_a: Vector3, vector_b: Vector3) -> float:
+    return arccos(vector_a.dot_product(vector_b) / (vector_a.modulo() * vector_b.modulo()))

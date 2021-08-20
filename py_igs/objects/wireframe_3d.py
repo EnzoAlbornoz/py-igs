@@ -47,7 +47,7 @@ class Wireframe3D(Graphical3DObject):
         # Get Points
         points = self.pipeline_points if self.in_pipeline else self.points
         # Project Points
-        points = [(point.as_vec4(1) * projection_matrix).try_into_vec2() for point in points]
+        points = [(point.as_vec4(1) * projection_matrix).try_into_vec3_homo().try_into_vec2() for point in points]
         # Return new Wireframe
         wireframe = Wireframe2D(*points, color=self.color, filled=self.filled)
         return wireframe

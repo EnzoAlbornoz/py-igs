@@ -41,6 +41,11 @@ Gabriel Soares Flores
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
+  <object class="GtkAdjustment" id="g-widget-navigation-nav-adjustment-perspective">
+    <property name="upper">200</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
   <object class="GtkAdjustment" id="g-widget-navigation-nav-adjustment-rotation">
     <property name="upper">360</property>
     <property name="step_increment">1</property>
@@ -705,6 +710,46 @@ Gabriel Soares Flores
                           <packing>
                             <property name="left_attach">0</property>
                             <property name="top_attach">8</property>
+                            <property name="width">8</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkBox" id="nav-adjustment-perspective">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="margin_bottom">4</property>
+                            <property name="spacing">8</property>
+                            <child>
+                              <object class="GtkLabel" id="nav-adjustment-perspective-label">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="label" translatable="yes">Perspective</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkScale" id="nav-adjustment-perspective-scale">
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="adjustment">g-widget-navigation-nav-adjustment-perspective</property>
+                                <property name="round_digits">1</property>
+                                <property name="value_pos">bottom</property>
+                                <signal name="change-value" handler="on-perspective-distance-change" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="expand">True</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="left_attach">0</property>
+                            <property name="top_attach">9</property>
                             <property name="width">8</property>
                           </packing>
                         </child>
@@ -2572,7 +2617,7 @@ Gabriel Soares Flores</property>
                                         <property name="can_focus">True</property>
                                         <property name="receives_default">False</property>
                                         <property name="draw_indicator">True</property>
-                                        <property name="group">window-object-edit-rotate-around-axis-z</property>
+                                        <property name="group">window-object-edit-rotate-around-point</property>
                                         <signal name="toggled" handler="on-object-edit-radio-rotate-axis-y-toggled" swapped="no"/>
                                       </object>
                                       <packing>

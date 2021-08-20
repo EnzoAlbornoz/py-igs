@@ -47,8 +47,8 @@ class Line3D(Graphical3DObject):
         point_a = self.pipeline_point_a if self.in_pipeline else self.point_a
         point_b = self.pipeline_point_b if self.in_pipeline else self.point_b
         # Transform
-        point_a = (point_a.as_vec4(1) * projection_matrix).try_into_vec2()
-        point_b = (point_b.as_vec4(1) * projection_matrix).try_into_vec2()
+        point_a = (point_a.as_vec4(1) * projection_matrix).try_into_vec3_homo().try_into_vec2()
+        point_b = (point_b.as_vec4(1) * projection_matrix).try_into_vec3_homo().try_into_vec2()
         # Create New Object
         return Line2D(point_a, point_b)
 

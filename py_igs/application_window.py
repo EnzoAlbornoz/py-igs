@@ -315,7 +315,17 @@ class ApplicationWindow(Gtk.ApplicationWindow):
             self.console_log(f"[Navigation] Moved {pan_step} to right")
         # Force Redraw
         self.widget_canvas.queue_draw()
-
+    # Perspective Handler
+    @Gtk.Template.Callback("on-perspective-distance-change")
+    def on_perspective_distance_change(self, range, scroll, value):
+        # Check Viewport and Window
+        if self.viewport is None or self.viewport.window is None:
+            return
+        # Get Distance
+        distance: float = value
+        self.viewport.window.perspective_distance = distance
+        # Force Redraw
+        self.widget_canvas.queue_draw()
     # Zoom Handlers
     @Gtk.Template.Callback("on-btn-clicked-zoom-in")
     def on_btn_clicked_zoom_in(self, _button):
