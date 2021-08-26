@@ -28,11 +28,11 @@ class Window:
         # Define Clip Methods
         self.cliping_methods = {
             ObjectType.POINT_2D: EClippingMethod.POINT_CLIP,
-            ObjectType.LINE_2D: EClippingMethod.LINE_LIANG_BARSKY,
-            ObjectType.WIREFRAME_2D: EClippingMethod.POLY_WEILER_ATHERTON_WITH_LB,
-            ObjectType.BEZIER_2D: EClippingMethod.LINE_LIANG_BARSKY,
-            ObjectType.BSPLINE_2D: EClippingMethod.LINE_LIANG_BARSKY,
-            ObjectType.OBJECT_2D: EClippingMethod.POLY_WEILER_ATHERTON_WITH_LB,
+            ObjectType.LINE_2D: EClippingMethod.LINE_COHEN_SUTHERLAND,
+            ObjectType.WIREFRAME_2D: EClippingMethod.POLY_WEILER_ATHERTON_WITH_CS,
+            ObjectType.BEZIER_2D: EClippingMethod.LINE_COHEN_SUTHERLAND,
+            ObjectType.BSPLINE_2D: EClippingMethod.LINE_COHEN_SUTHERLAND,
+            ObjectType.OBJECT_2D: EClippingMethod.POLY_WEILER_ATHERTON_WITH_CS,
         }
         # Define Statistics
         self.show_stats = False
@@ -91,23 +91,21 @@ class Window:
             transform = Vector3(0, 0, -self.perspective_distance).as_vec4(1)
             transform *= homo_coords3_matrix_rotate_xyz(self.theta_x, self.theta_y, self.theta_z)
             vec_cop = (transform - vec_cop.as_vec4(1)).try_into_vec3()
-            print(vec_cop)
         return vec_cop
 
 
     # Define Transformations
-    def pan(self, dx: float = 0, dy: float = 0):
+    def pan(self, dx: float = 0, dy: float = 0, dz: float = 0):
         # Compute Delta Vectors
-        vector_delta = Vector2(dx, dy).as_vec3(1)
-        # Get Window Theta
-        vup_theta = self.get_vec_up_theta()
+        vector_delta = Vector3(dx, dy, dz).as_vec4(1)
         # Rotate Delta Vector
-        vector_delta *= homo_coords2_matrix_rotate(vup_theta)
+        vector_delta *= homo_coords3_matrix_rotate_xyz(self.theta_x, self.theta_y, self.theta_z)
         # Cast as Vector 2
-        vector_delta = vector_delta.try_into_vec2()
+        vector_delta = vector_delta.try_into_vec3()
         # Update Data
         self.center_x += vector_delta.get_x()
         self.center_y += vector_delta.get_y()
+        self.center_z += vector_delta.get_z()
 
     def scale(self, scale_factor_x: float = 1, scale_factor_y: float = 1):
         # Scale Width and Height

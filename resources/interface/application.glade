@@ -353,7 +353,7 @@ Gabriel Soares Flores
                               <object class="GtkComboBoxText" id="window-settings-clipping-method">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="active">1</property>
+                                <property name="active">0</property>
                                 <items>
                                   <item id="2" translatable="yes">Cohen-Sutherland</item>
                                   <item id="3" translatable="yes">Liang-Barsky</item>
