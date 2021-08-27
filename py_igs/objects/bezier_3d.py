@@ -108,18 +108,7 @@ class Bezier3D(Graphical3DObject):
         cairo.set_source_rgba(*self.color)
         # Get Lines
         lines = self.__get_2d_render_points()
-        columns = list(map(lambda x: list(x), zip(*lines)))
         for points in lines:
-            # Cast points into homogeneus space
-            homo2d_points = [point.as_tuple() for point in points]
-            # Draw line in canvas
-            for idx, (x, y) in  enumerate(homo2d_points):
-                if idx == 0:
-                    cairo.move_to(x, y)
-                else:
-                    cairo.line_to(x, y)
-            cairo.stroke()
-        for points in columns:
             # Cast points into homogeneus space
             homo2d_points = [point.as_tuple() for point in points]
             # Draw line in canvas
@@ -186,7 +175,9 @@ class Bezier3D(Graphical3DObject):
     def clip(self, method: EClippingMethod) -> GraphicalObject | None:
         # Compute Dist Between 0 and 1
         # Get Render Points
+        render_points_cols = list(map(lambda x: list(x), zip(*self.render_points_2d)))
         render_points = self.render_points_2d
+        render_points.extend(render_points_cols)
         # Switch Method
         if method == EClippingMethod.LINE_COHEN_SUTHERLAND:
             # Clip Using Cohen Sutherland
