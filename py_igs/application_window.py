@@ -17,6 +17,7 @@ from enum import IntEnum, unique
 from gi.repository import Gtk, Gdk
 from cairo import Context
 from helpers import extract_points_as_vec3_from_box, gdk_rgba_as_tuple, parse_text_into_points_2d, parse_text_into_points_3d
+from objects.bezier_3d import Bezier3D
 from objects.bspline_2d import BSpline2D
 # from objects.line_2d import Line2D
 from objects.line_3d import Line3D
@@ -43,7 +44,8 @@ class DialogObjectType(IntEnum):
     LINE = 1
     WIREFRAME = 2
     WIREFRAME_TEXT = 3
-    CURVE_TEXT = 4
+    SURFACE_TEXT = 4
+    CURVE_TEXT = 5
 @unique
 class DialogSceneSaveType(IntEnum):
     SELECT_OBJECT = 0
@@ -74,6 +76,8 @@ class ApplicationWindow(Gtk.ApplicationWindow):
     dialog_object_add_btn_save: Any = Gtk.Template.Child("window-object-add-btn-save")
     dialog_object_add_tab_text_curve_type: Any = Gtk.Template.Child("widget-objects-add-curve-option-type-value")
     dialog_object_add_tab_text_curve_coords: Any = Gtk.Template.Child("widget-objects-add-curve-input-value")
+    dialog_object_add_tab_text_surface_type: Any = Gtk.Template.Child("widget-objects-add-surface-option-type-value")
+    dialog_object_add_tab_text_surface_coords: Any = Gtk.Template.Child("widget-objects-add-surface-input-value")
 
     dialog_object_edit: Any = Gtk.Template.Child("window-object-edit")
     dialog_object_edit_rotate_around_center: Any = Gtk.Template.Child("window-object-edit-rotate-around-center")
@@ -536,6 +540,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         # Line
         self.viewport.window.cliping_methods[ObjectType.LINE_2D] = clip_method
         self.viewport.window.cliping_methods[ObjectType.BEZIER_2D] = clip_method
+        self.viewport.window.cliping_methods[ObjectType.BEZIER_3D] = clip_method
         # Wireframes
         self.viewport.window.cliping_methods[ObjectType.WIREFRAME_2D] = (
             EClippingMethod.POLY_WEILER_ATHERTON_WITH_CS
@@ -578,7 +583,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
             for box_coords_element in box_coords.get_children():
                 if isinstance(box_coords_element, Gtk.SpinButton):
                     # Configure Buttons
-                    box_coords_element_adjustment = Gtk.Adjustment.new(0, -float_info.max, float_info.max, 1, 10, 0)
+                    box_coords_element_adjustment: Any = Gtk.Adjustment.new(0, -float_info.max, float_info.max, 1, 10, 0)
                     box_coords_element.set_adjustment(box_coords_element_adjustment)
                     box_coords_element.set_numeric(True)
         for box_coords in self.dialog_object_add_tab_wireframe_coords.get_children():
@@ -586,13 +591,14 @@ class ApplicationWindow(Gtk.ApplicationWindow):
             for box_coords_element in box_coords.get_children():
                 if isinstance(box_coords_element, Gtk.SpinButton):
                     # Configure Buttons
-                    box_coords_element_adjustment = Gtk.Adjustment.new(0, -float_info.max, float_info.max, 1, 10, 0)
+                    box_coords_element_adjustment: Any = Gtk.Adjustment.new(0, -float_info.max, float_info.max, 1, 10, 0)
                     box_coords_element.set_adjustment(box_coords_element_adjustment)
                     box_coords_element.set_numeric(True)
         # Reset Text
         self.dialog_object_add_object_name.set_text("")
         self.dialog_object_add_tab_text_coords.set_text("")
         self.dialog_object_add_tab_text_curve_coords.set_text("")
+        self.dialog_object_add_tab_text_surface_coords.set_text("")
         # Reset Color
         color_white: Any = Gdk.RGBA()
         self.dialog_object_add_object_color.set_rgba(color_white)
@@ -696,6 +702,21 @@ class ApplicationWindow(Gtk.ApplicationWindow):
                 elif curve_type == ObjectType.BSPLINE_2D:
                     # Its a Line
                     object_to_build = BSpline2D(0.01, *points)
+            elif self.add_object_current_type is DialogObjectType.SURFACE_TEXT:
+                # Get Text
+                text: str = self.dialog_object_add_tab_text_surface_coords.get_text()
+                lines_text = text.split(";")
+                # Define Type
+                # Get Value From Button
+                tree_iter: int = self.dialog_object_add_tab_text_surface_type.get_active_iter()
+                curve_type_str: str = self.dialog_object_add_tab_text_surface_type.get_model()[tree_iter][1]
+                curve_type = ObjectType(int(curve_type_str))
+                # Get Points
+                points = [parse_text_into_points_3d(points_text) for points_text in lines_text]
+                # Check Object to Build
+                if curve_type == ObjectType.BEZIER_3D:
+                    # Its a Point
+                    object_to_build = Bezier3D(0.05, *points)
             # Get Object Name
             object_name = self.dialog_object_add_object_name.get_text()
             # Get Object Color

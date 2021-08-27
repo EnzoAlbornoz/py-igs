@@ -14,6 +14,7 @@ class ObjectType(IntEnum):
     WIREFRAME_3D = 8
     OBJECT_2D = 9
     OBJECT_3D = 10
+    BEZIER_3D = 11
     # Handle Print
     def __str__(self) -> str:
         if self is ObjectType.POINT_2D:
@@ -36,5 +37,7 @@ class ObjectType(IntEnum):
             return "OBJECT_2D"
         elif self is ObjectType.OBJECT_3D:
             return "OBJECT_3D"
+        elif self is ObjectType.BEZIER_3D:
+            return "BEZIER_3D"
         else:
             raise ValueError("Invalid Type")

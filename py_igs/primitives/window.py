@@ -33,6 +33,7 @@ class Window:
             ObjectType.BEZIER_2D: EClippingMethod.LINE_COHEN_SUTHERLAND,
             ObjectType.BSPLINE_2D: EClippingMethod.LINE_COHEN_SUTHERLAND,
             ObjectType.OBJECT_2D: EClippingMethod.POLY_WEILER_ATHERTON_WITH_CS,
+            ObjectType.BEZIER_3D: EClippingMethod.LINE_COHEN_SUTHERLAND,
         }
         # Define Statistics
         self.show_stats = False
