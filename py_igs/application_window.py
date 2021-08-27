@@ -16,7 +16,7 @@ from functools import reduce
 from enum import IntEnum, unique
 from gi.repository import Gtk, Gdk
 from cairo import Context
-from helpers import extract_points_as_vec3_from_box, gdk_rgba_as_tuple, parse_text_into_points_2d, parse_text_into_points_3d
+from helpers import chunks_non_null, extract_points_as_vec3_from_box, gdk_rgba_as_tuple, parse_text_into_points_2d, parse_text_into_points_3d
 from objects.bezier_3d import Bezier3D
 from objects.bspline_2d import BSpline2D
 # from objects.line_2d import Line2D
@@ -704,15 +704,15 @@ class ApplicationWindow(Gtk.ApplicationWindow):
                     object_to_build = BSpline2D(0.01, *points)
             elif self.add_object_current_type is DialogObjectType.SURFACE_TEXT:
                 # Get Text
-                text: str = self.dialog_object_add_tab_text_surface_coords.get_text()
-                lines_text = text.split(";")
+                points_text: str = self.dialog_object_add_tab_text_surface_coords.get_text()
                 # Define Type
                 # Get Value From Button
                 tree_iter: int = self.dialog_object_add_tab_text_surface_type.get_active_iter()
                 curve_type_str: str = self.dialog_object_add_tab_text_surface_type.get_model()[tree_iter][1]
                 curve_type = ObjectType(int(curve_type_str))
                 # Get Points
-                points = [parse_text_into_points_3d(points_text) for points_text in lines_text]
+                points_total = parse_text_into_points_3d(points_text)
+                points = chunks_non_null(points_total, 16)
                 # Check Object to Build
                 if curve_type == ObjectType.BEZIER_3D:
                     # Its a Point
