@@ -210,9 +210,6 @@ class DescriptorOBJ:
                     surf_mats = chunks_non_null(curve_vecs, size)
                     # Build Object
                     curve = Bezier3D(0.05, *surf_mats) if current_curve_type == "bezier" else BSpline3D(0.05, *surf_mats)
-                    # Check Filled
-                    if isinstance(curve, Wireframe2D):
-                        curve.set_filled(fill_faces)
                     # Check Color
                     if current_using_material is not None:
                         # Update Object Material
