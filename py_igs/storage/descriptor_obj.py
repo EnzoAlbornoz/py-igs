@@ -1,10 +1,14 @@
 # Import Dependencies
 from __future__ import annotations
+from math import floor, sqrt
 from pathlib import Path
 from typing import Dict, List, Tuple, cast
 from pathlib import Path
+from helpers import chunks_non_null
+from objects.bezier_3d import Bezier3D
 from objects.bspline_2d import BSpline2D
 from objects.bezier_2d import Bezier2D
+from objects.bspline_3d import BSpline3D
 from objects.object_3d import Object3D
 from objects.point_2d import Point2D
 from objects.line_2d import Line2D
@@ -186,6 +190,39 @@ class DescriptorOBJ:
                         objects[f"loaded_object_{len(objects)}"] = point
                     else:
                         objects[current_object] = point
+                elif line.startswith("surf "):
+                    # Point
+                    # Get Point Data
+                    _, _, _, _, _, *values  = [el for el in line.strip("\n").split(" ") if len(el) > 0]
+                    # Parse FROM and TO
+                    idx_vecs = [int(value.split("/")[0]) for value in values]
+                    # Load Vertices into Vector 2D
+                    curve_vecs = [vertices_positions[idx_vec - 1] for idx_vec in idx_vecs]
+                    curve_vecs = [
+                        Vector3(
+                            (vx * (0.5 * window_width if is_normalized else 1)) + window_center.get_x(),
+                            (vy * (0.5 * window_height if is_normalized else 1)) + window_center.get_y(),
+                            (vz * (0.5 * window_height if is_normalized else 1)) + window_center.get_z()
+                        )
+                        for (vx, vy, vz, *_) in curve_vecs
+                    ]
+                    size = floor(sqrt(len(curve_vecs)))
+                    surf_mats = chunks_non_null(curve_vecs, size)
+                    # Build Object
+                    curve = Bezier3D(0.05, *surf_mats) if current_curve_type == "bezier" else BSpline3D(0.05, *surf_mats)
+                    # Check Filled
+                    if isinstance(curve, Wireframe2D):
+                        curve.set_filled(fill_faces)
+                    # Check Color
+                    if current_using_material is not None:
+                        # Update Object Material
+                        material_kd_rgb = materials[current_using_material]
+                        curve.set_color((*material_kd_rgb, 1))
+                    # Add curve to Objects
+                    if current_object is None:
+                        objects[f"loaded_object_{len(objects)}"] = curve
+                    else:
+                        objects[current_object] = curve
                 elif line.startswith("o "):
                     # Object Name
                     _, object_name = [el for el in line.strip("\n").split(" ") if len(el) > 0]
