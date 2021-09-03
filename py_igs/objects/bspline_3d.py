@@ -1,6 +1,6 @@
 from __future__ import annotations
 # from itertools import chain
-from typing import List, TYPE_CHECKING, cast
+from typing import List, TYPE_CHECKING
 from math import ceil
 from itertools import chain
 
@@ -10,14 +10,18 @@ from primitives.clipping_method import EClippingMethod, cohen_sutherland_clip_li
 from primitives.graphical_object import Graphical3DObject, GraphicalObject
 from objects.object_type import ObjectType
 from primitives.matrix import Vector2, Matrix, Vector3, Vector4
-from functools import reduce
 if TYPE_CHECKING:
     from cairo import Context
     from primitives.matrix import Matrix
 
-MATRIX_BEZIER_ARRAY: NDArray[float64] = array([[-1, 3, -3, 1], [3, -6, 3, 0], [-3, 3, 0, 0], [1, 0, 0, 0]], dtype=float64)
-MATRIX_BEZIER = Matrix(MATRIX_BEZIER_ARRAY)
-class Bezier3D(Graphical3DObject):
+SPLINE_MATRIX = Matrix.from_list([
+    [-1/6, 3/6,-3/6, 1/6],
+    [ 3/6,-6/6, 3/6, 0/6],
+    [-3/6, 0/6, 3/6, 0/6],
+    [ 1/6, 4/6, 1/6, 0/6],
+])
+SPLINE_MATRIX_TRANSPOSED = SPLINE_MATRIX.as_transposed()
+class BSpline3D(Graphical3DObject):
     # Define Constructor
     def __init__(self, accuracy_step: float, *control_points: List[Vector3], accuracy_step_snd: float = 0) -> None:
         # Call Super Constructor
@@ -30,48 +34,101 @@ class Bezier3D(Graphical3DObject):
         # Define Pipeline Attributes
         self.pipeline_control_points = self.control_points
         self.pipeline_render_points = self.render_points
-        # print(len(self.render_points))
         self.render_points_2d: List[List[Vector2]] = []
     # Private Methods
     def __compute_poly_line_points(self, accuracy: float, control_points: List[List[Vector3]]) -> List[List[Vector3]]:
-        def ext(a: List[List[Vector3]], n: List[List[Vector3]]) -> List[List[Vector3]]:
-            a.extend(n)
-            return a
-        return reduce(ext,[self.__compute_poly_line_points_section(accuracy, cpg) for cpg in control_points], cast(List[List[Vector3]],[]))
-    def __compute_poly_line_points_section(self, accuracy: float, control_points: List[Vector3]) -> List[List[Vector3]]:
+        # Split in 4x4 chunks
+        total_lines = len(control_points)
+        total_columns = len(control_points[0])
+        sub_mats: List[List[List[Vector3]]] = []
+        for i in range(total_lines - 3):
+            for j in range(total_columns - 3):
+                sub_mats.append(
+                    [[control_points[ix][jx] for jx in range(j, j+4)] for ix in range(i, i+4)]
+                )
+        return list(chain.from_iterable([self.__compute_poly_line_points_section(accuracy, sub_mat) for sub_mat in sub_mats]))
+
+    def __compute_fwd_diff_curve(self, n: int, x_l: List[float], y_l: List[float], z_l: List[float]) -> List[Vector3]:
+        x, x1, x2, x3 = x_l
+        y, y1, y2, y3 = y_l
+        z, z1, z2, z3 = z_l
+        line_points = [Vector3(x, y, z)]
+        for _ in range(1, n):
+            # Update Values
+                x += x1; x1 += x2; x2 += x3
+                y += y1; y1 += y2; y2 += y3
+                z += z1; z1 += z2; z2 += z3
+                # Append new segment
+                line_points.append(Vector3(x, y, z))
+        return line_points
+    def __compute_poly_line_points_section(self, accuracy: float, control_points: List[List[Vector3]]) -> List[List[Vector3]]:
         # Compute Number of Polygons 
-        required_points_ammount = ceil(accuracy ** -1) - 1
-        controls_x, controls_y, controls_z = zip(*[p.as_tuple() for p in control_points])
-        controls_x_e: NDArray[float64] = array(controls_x).reshape((4, 4))
-        controls_y_e: NDArray[float64] = array(controls_y).reshape((4, 4))
-        controls_z_e: NDArray[float64] = array(controls_z).reshape((4, 4))
+        required_points_ammount_st = ceil(accuracy ** -1)
+        required_points_ammount_nd = ceil(self.accuracy_step_snd ** -1)
+        controls_x_e: NDArray[float64] = array([[cpe.get_x() for cpe in cpl] for cpl in control_points])
+        controls_y_e: NDArray[float64] = array([[cpe.get_y() for cpe in cpl] for cpl in control_points])
+        controls_z_e: NDArray[float64] = array([[cpe.get_z() for cpe in cpl] for cpl in control_points])
         GX = Matrix(controls_x_e)
         GY = Matrix(controls_y_e)
         GZ = Matrix(controls_z_e)
-        QM_X = MATRIX_BEZIER * GX * MATRIX_BEZIER
-        QM_Y = MATRIX_BEZIER * GY * MATRIX_BEZIER
-        QM_Z = MATRIX_BEZIER * GZ * MATRIX_BEZIER
+        # print("GX: ",GX)
+        ES = Matrix.from_list([
+            [0, 0, 0, 1],
+            [accuracy**3, accuracy**2, accuracy, 0],
+            [6*accuracy**3, 2*accuracy**2, 0, 0],
+            [6*accuracy**3, 0, 0, 0],
+        ])
+        # print("ES: ", ES)
+        ET = Matrix.from_list([
+            [0, 0, 0, 1],
+            [self.accuracy_step_snd**3, self.accuracy_step_snd**2, self.accuracy_step_snd, 0],
+            [6*self.accuracy_step_snd**3, 2*self.accuracy_step_snd**2, 0, 0],
+            [6*self.accuracy_step_snd**3, 0, 0, 0],
+        ])
+
+        ddx = ES * SPLINE_MATRIX * GX * SPLINE_MATRIX_TRANSPOSED * (ET.as_transposed())
+        ddy = ES * SPLINE_MATRIX * GY * SPLINE_MATRIX_TRANSPOSED * (ET.as_transposed())
+        ddz = ES * SPLINE_MATRIX * GZ * SPLINE_MATRIX_TRANSPOSED * (ET.as_transposed())
+        # print("ddx: ", ddx)
+
         points: List[List[Vector3]] = []
-        for si in range(required_points_ammount + 1):
-            s = si / required_points_ammount
-            S = Vector4(s**3, s**2, s, 1)
-            points.append([])
-            for ti in range(required_points_ammount + 1):
-                t = ti / required_points_ammount
-                T = Vector4(t**3, t**2, t, 1).as_transposed()
 
-                qst_x = (S * QM_X * T).lines()[0][0]
-                qst_y = (S * QM_Y * T).lines()[0][0]
-                qst_z = (S * QM_Z * T).lines()[0][0]
+        for _ in range(1, required_points_ammount_st):
+            ddxl = ddx.lines()
+            ddyl = ddy.lines()
+            ddzl = ddz.lines()
+            
+            line = self.__compute_fwd_diff_curve(required_points_ammount_st - 1, ddxl[0], ddyl[0], ddzl[0])
+            # print(line)
+            points.append(line)
 
-                points[si].append(Vector3(qst_x, qst_y, qst_z))
+            ddx = ddx + Matrix.from_list([ddxl[li + 1] if li < 3 else ddxl[li] for li in range(4)])
+            ddy = ddy + Matrix.from_list([ddyl[li + 1] if li < 3 else ddyl[li] for li in range(4)])
+            ddz = ddz + Matrix.from_list([ddzl[li + 1] if li < 3 else ddzl[li] for li in range(4)])
+
+        ddx = (ES * SPLINE_MATRIX * GX * SPLINE_MATRIX_TRANSPOSED * ET.as_transposed()).as_transposed()
+        ddy = (ES * SPLINE_MATRIX * GY * SPLINE_MATRIX_TRANSPOSED * ET.as_transposed()).as_transposed()
+        ddz = (ES * SPLINE_MATRIX * GZ * SPLINE_MATRIX_TRANSPOSED * ET.as_transposed()).as_transposed()
+
+        for _ in range(1, required_points_ammount_nd):
+            ddxl = ddx.lines()
+            ddyl = ddy.lines()
+            ddzl = ddz.lines()
+            
+            line = self.__compute_fwd_diff_curve(required_points_ammount_nd - 1, ddxl[0], ddyl[0], ddzl[0])
+            points.append(line)
+
+            ddx = ddx + Matrix.from_list([ddxl[li + 1] if li < 3 else ddxl[li] for li in range(4)])
+            ddy = ddy + Matrix.from_list([ddyl[li + 1] if li < 3 else ddyl[li] for li in range(4)])
+            ddz = ddz + Matrix.from_list([ddzl[li + 1] if li < 3 else ddzl[li] for li in range(4)])
+
         return points
 
 
     # Type Definition
     @staticmethod
     def get_type() -> ObjectType:
-        return ObjectType.BEZIER_3D
+        return ObjectType.BSPLINE_3D
     # Define Pipeline Methods
     def pipeline(self):
         # Reset Pipeline Points

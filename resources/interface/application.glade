@@ -1926,6 +1926,7 @@ Gabriel Soares Flores</property>
                                     <property name="active">0</property>
                                     <items>
                                       <item id="11" translatable="yes">Bezier - Blending Functions</item>
+                                      <item id="12" translatable="yes">B-Spline - Forward Differences</item>
                                     </items>
                                   </object>
                                   <packing>

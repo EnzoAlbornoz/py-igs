@@ -19,6 +19,7 @@ from cairo import Context
 from helpers import chunks_non_null, extract_points_as_vec3_from_box, gdk_rgba_as_tuple, parse_text_into_points_2d, parse_text_into_points_3d
 from objects.bezier_3d import Bezier3D
 from objects.bspline_2d import BSpline2D
+from objects.bspline_3d import BSpline3D
 # from objects.line_2d import Line2D
 from objects.line_3d import Line3D
 from objects.object_type import ObjectType
@@ -34,6 +35,7 @@ from primitives.viewport import Viewport
 from primitives.window import Window
 from storage.descriptor_obj import DescriptorOBJ
 from primitives.clipping_method import EClippingMethod
+from itertools import chain
 # Setup Graphic
 gi.require_version("Gtk", "3.0")
 gi.require_foreign("cairo")
@@ -541,6 +543,7 @@ class ApplicationWindow(Gtk.ApplicationWindow):
         self.viewport.window.cliping_methods[ObjectType.LINE_2D] = clip_method
         self.viewport.window.cliping_methods[ObjectType.BEZIER_2D] = clip_method
         self.viewport.window.cliping_methods[ObjectType.BEZIER_3D] = clip_method
+        self.viewport.window.cliping_methods[ObjectType.BSPLINE_3D] = clip_method
         # Wireframes
         self.viewport.window.cliping_methods[ObjectType.WIREFRAME_2D] = (
             EClippingMethod.POLY_WEILER_ATHERTON_WITH_CS
@@ -704,19 +707,24 @@ class ApplicationWindow(Gtk.ApplicationWindow):
                     object_to_build = BSpline2D(0.01, *points)
             elif self.add_object_current_type is DialogObjectType.SURFACE_TEXT:
                 # Get Text
-                points_text: str = self.dialog_object_add_tab_text_surface_coords.get_text()
+                points_text_raw: str = self.dialog_object_add_tab_text_surface_coords.get_text()
                 # Define Type
                 # Get Value From Button
                 tree_iter: int = self.dialog_object_add_tab_text_surface_type.get_active_iter()
                 curve_type_str: str = self.dialog_object_add_tab_text_surface_type.get_model()[tree_iter][1]
                 curve_type = ObjectType(int(curve_type_str))
-                # Get Points
-                points_total = parse_text_into_points_3d(points_text)
-                points = chunks_non_null(points_total, 16)
                 # Check Object to Build
                 if curve_type == ObjectType.BEZIER_3D:
+                    # Get Points
+                    points_total = chain.from_iterable([parse_text_into_points_3d(points_text.strip()) for points_text in points_text_raw.split(";")])
+                    points = chunks_non_null(points_total, 16)
                     # Its a Point
                     object_to_build = Bezier3D(0.05, *points)
+                elif curve_type == ObjectType.BSPLINE_3D:
+                    # Get Points
+                    points_total = [parse_text_into_points_3d(points_text.strip()) for points_text in points_text_raw.split(";")]
+                    # Its a Point
+                    object_to_build = BSpline3D(0.05, *points_total)
             # Get Object Name
             object_name = self.dialog_object_add_object_name.get_text()
             # Get Object Color
